@@ -1,0 +1,11 @@
+{% if simulation_list %}
+    <ul>
+    {% for simulation in simulation_list %}
+    <li><a href="{% url 'visualize:detail' simulation.id %}">{{ simulation.name }} </a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No simulations available.</p>
+{% endif %}
+
+
