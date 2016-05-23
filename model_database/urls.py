@@ -19,6 +19,6 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.home),
-    url(r'^models/', include('visualize.urls')), # all related to the app visualize
+    url(r'^models/', include('visualize.urls')), 
     url(r'^admin/', admin.site.urls),
 ]

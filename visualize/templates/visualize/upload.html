@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="{% static 'visualize/upload.css' %}" />
+</head>
+<body>
+<div id='form'>
+<form>
+    {% csrf_token %}
+    <input id="file" type="file" name="file"><br>
+    <textarea id="comments" name="comments" placeholder="Enter comments here."></textarea><br>
+    <textarea id="tags" name="tags" placeholder="Enter tags here."></textarea><br>
+    <input type="button" id='submit' value="Upload File"><br>
+</form>
+</div>
+<script type="text/javascript" src="{% static 'visualize/upload.js' %}"/></script>
+</body>
+</html>

@@ -1,1 +1,22 @@
-{{ simulation }}
+<!DOCTYPE html>
+<html>
+<head>
+{% load staticfiles %}
+<link rel="stylesheet" type="text/css" href="{% static 'visualize/detail.css' %}" />
+</head>
+<body>
+<h2>Simulation Details</h2>
+<table>
+<tr>
+    <th>Parameter</th>
+    <th>Value</th>
+</tr>
+{% for name, value in simulation.get_fields %}
+<tr>
+    <td>{{ name }}</td>
+    <td>{{ value }}</td>
+</tr>
+{% endfor %}
+</table>
+</body>
+</html>
