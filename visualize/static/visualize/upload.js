@@ -1,5 +1,8 @@
 !function() {
 "use strict";
+
+// define form data object
+// make this more general to parse any form, aka build key from 'form_id', and 
 var obj = {};
 obj['tags'] = "";
 obj['comments'] = "";
@@ -10,12 +13,13 @@ window.onload = function() {
     var btnSubmit = document.getElementById('submit');
     btnSubmit.addEventListener('click', onSubmit)
     fileInput.addEventListener('change', displayUpload);
+    console.log(obj);
 };
 
 var onSubmit = function(e) {
     parseTags();
     parseComments();
-    console.log(obj)
+    console.log(obj);
 };
 
 var displayUpload = function(e) {
@@ -26,12 +30,12 @@ var displayUpload = function(e) {
         fr.onload = function(e) {
             try {
                 var temp = JSON.parse(e.target.result);
-                _mergeRecursive(obj, temp);
+                _merge(obj, temp);
                 tableCreate();
                 console.log(obj)
 
             } catch(err) {
-                console.log(err)
+                console.log(err) // TODO: Handle this gracefully
             }
         }
         fr.readAsText(file);
@@ -58,7 +62,6 @@ function tableCreate() {
 function parseTags() {
     var txtTags = document.getElementById('tags');
     if (txtTags.value === "") {
-        obj['tags'] = "";
         return;
     }
     obj['tags'] = [];
@@ -74,12 +77,12 @@ function parseComments() {
 }
 
 // unscoped helping functions
-var _mergeRecursive = function(obj1, obj2) {
-    for ( var p in obj2 ) {
-        if ( obj2.hasOwnProperty(p) && obj1[p] !== "" ) {
-            _mergeRecursive(obj1[p],obj2[p]);
+var _merge = function(dest, src) {
+    for ( var par in src ) {
+        if ( src.hasOwnProperty(par) && dest[par] !== "" ) {
+            _merge(dest[par], src[par]);
         } else {
-            obj1[p] = obj2[p];
+            dest[par] = src[par];
         }
     }
 }
