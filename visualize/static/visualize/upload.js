@@ -4,22 +4,45 @@
 // define form data object
 // make this more general to parse any form, aka build key from 'form_id', and 
 var obj = {};
-obj['tags'] = "";
-obj['comments'] = "";
-obj['parameters'] = "";
 
 window.onload = function() {
-    var fileInput = document.getElementById('file');
-    var btnSubmit = document.getElementById('submit');
-    btnSubmit.addEventListener('click', onSubmit)
-    fileInput.addEventListener('change', displayUpload);
-    console.log(obj);
+    $("#file").change(displayUpload);
+    $("#submit").click(onSubmit);
 };
 
 var onSubmit = function(e) {
-    parseTags();
-    parseComments();
-    console.log(obj);
+    e.preventDefault();
+    console.log(obj['files']);
+    // handle csrf token
+    var csrftoken = getCookie('csrftoken');
+    function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    $.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+    });
+    $.ajax({
+        url : "/models/upload/",
+        type: "POST",
+        data: { post : obj['files'] },
+
+        success : function(json) {
+            $("#results").val('');
+            console.log(json);
+            console.log("success");
+        },
+
+        error : function(xhr,errmsg,err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+ errmsg +
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+    });
 };
 
 var displayUpload = function(e) {
@@ -29,11 +52,13 @@ var displayUpload = function(e) {
         var fr = new FileReader();
         fr.onload = function(e) {
             try {
-                var temp = JSON.parse(e.target.result);
-                _merge(obj, temp);
-                tableCreate();
-                console.log(obj)
-
+                // console.log( e.target.result );
+                var $newdiv = $("<div id='results'></div>");
+                $("body").append($newdiv);
+                $("#results").append(document.createTextNode(e.target.result))                
+                if (typeof e.target.result === 'string') {
+                    obj['files'] = e.target.result;
+                }
             } catch(err) {
                 console.log(err) // TODO: Handle this gracefully
             }
@@ -44,46 +69,20 @@ var displayUpload = function(e) {
     }
 };
 
-    // TODO: Add logic, to handle multiple file uploads before the submission
-function tableCreate() {
-    var body = document.body;
-    var tbl = document.createElement('table');
-    for (var i=0; i<obj.parameters.length; i++) {
-        var tr = tbl.insertRow();
-        for (var key in obj.parameters[i]) {
-            var td = tr.insertCell();
-            td.appendChild(document.createTextNode(obj.parameters[i][key]));
+// using jQuery
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
         }
     }
-    body.appendChild(tbl);
-    
-}
-
-function parseTags() {
-    var txtTags = document.getElementById('tags');
-    if (txtTags.value === "") {
-        return;
-    }
-    obj['tags'] = [];
-    var tags = txtTags.value.split(',');
-    for (var i=0; i<tags.length; i++) {
-        obj['tags'][i] = tags[i].trim();
-    }      
-}
-
-function parseComments() {
-    var txtComments = document.getElementById('comments');
-    obj['comments'] = txtComments.value;
-}
-
-// unscoped helping functions
-var _merge = function(dest, src) {
-    for ( var par in src ) {
-        if ( src.hasOwnProperty(par) && dest[par] !== "" ) {
-            _merge(dest[par], src[par]);
-        } else {
-            dest[par] = src[par];
-        }
-    }
+    return cookieValue;
 }
 }();

@@ -1,0 +1,30 @@
+notes:
+
+have num_processes working on handling all of the processing tasks with each task in its own process or each taskgroup in its own
+process, taskgroup allows to have tasks that must be completed in succession.  
+
+Initially:
+SimulationProcessingTask
+    DynamicRuptureProcessingTask
+    - plot kinematic fields, mu0, and far-field spectra, and slip-rates, and stresses at specified points on the fault from SORD code at points along the fault, one-point statistics, prepare csv file for R analysis and modeling. 
+    Notes:
+        - eventually SGSim and LMC fitting needs to be implemented in python, most likely this will be done immediately after SCEC.
+        - need specified filetype to store matricies of coregionalization, so we can compute the average values and use the 'best fitting' version as well as compare with faults of different lengths.
+    WavePropagationProcessingTask
+    - plot PGA, PGV, selected seismograms and their acceleration spectra, make GMPE comparisons.
+
+
+Think about different figures that I make and implement generalized plotting wrappers to make 
+implementing plots of different things easier.
+
+
+
+
+meeting notes:
+
+- plot gmpe bias plots
+- compute standard deviations for unilateral rupture.
+
+
+compute mean. slip, mean. psv, mean.vrup, std. slip, std. psv, std.vrup, 
+and correlations between everything.
