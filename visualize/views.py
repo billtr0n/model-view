@@ -12,6 +12,8 @@ from .tasks import process_and_upload_simulations_task
 from processing.main import process_and_upload_simulations
 
 
+""" upload method will accept a list of folders that need to be operated on. these should be transfered to the server already. 
+    after they are done uploading they will redirect to models. new models will be visible from models page. """
 def upload(request):
     if request.method == 'POST':
         if request.is_ajax():
