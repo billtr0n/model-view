@@ -1,5 +1,5 @@
 # pyOrogeny
-Simple web-database to store and display dynamic rupture simulations from SORD. 
+simple web-database to store and display dynamic rupture simulations from sord. 
 
 
 ### Starting development server

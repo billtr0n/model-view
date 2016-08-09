@@ -6,12 +6,24 @@ from django import forms
 from django.forms import ModelForm
 
 # user defines imports
-from .models import Simulation
+from .models import Simulation, Data_Product, Parameters
 
 class SimulationModelForm(ModelForm):
     class Meta:
         model = Simulation
-        exclude = ['comments','upload_date', 'user']
+        exclude = ['comments','upload_date','user']
+
+class DataProductModelForm(ModelForm):
+    class Meta:
+        model = Data_Product
+        fields = '__all__'
+
+class ParametersModelForm(ModelForm):
+    class Meta:
+        model = Parameters
+        fields = '__all__'
+
+
 
 class UploadFileForm( forms.Form ):
     file = forms.FileField()

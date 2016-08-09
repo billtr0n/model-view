@@ -48,9 +48,9 @@ var <- variogram(sim.g, cressie = TRUE, width=500)
 variograms <- split(var, f=var$id)
 
 # save variograms as individual csv files in folder variograms
-dir.create( paste(cwd, "data/vario", sep="") )
+dir.create( paste(cwd, "/data/vario", sep="") )
 for (name in names(variograms)) {
-  filename = paste(cwd, "data/vario/", name, ".csv", sep="")
+  filename = paste(cwd, "/data/vario/", name, ".csv", sep="")
   # print(filename)
   write.csv(variograms[name], file = filename)
   # print(variograms[name])
@@ -103,4 +103,4 @@ p10 <- ggplot(data = variograms$mu0, aes(x=dist, y=gamma)) + geom_point() +
 
 # write out variogram in some readable format, preferably csv 
 grd <- grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10, layout_matrix=lay, bottom="dist", left="gamma")
-ggsave( paste(cwd, "figs/vario.pdf", sep=""), grd )
+ggsave( paste(cwd, "/figs/vario.pdf", sep=""), grd )

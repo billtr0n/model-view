@@ -8,8 +8,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 # my includes
 from .models import Simulation
 from .forms import UploadFileForm
-from .tasks import process_and_upload_simulations_task
-from processing.main import process_and_upload_simulations
+from .tasks import process_and_upload_simulations_task, test
 
 
 """ upload method will accept a list of folders that need to be operated on. these should be transfered to the server already. 
@@ -18,14 +17,14 @@ def upload(request):
     if request.method == 'POST':
         if request.is_ajax():
             post = request.POST.get('post');
-            if _verify_file_existence( post ):
-                files = post.split('\n')
-                process_and_upload_simulations_task( files )
+            clean_post = _cleanse_post( post )
+            if clean_post:
+                for file in clean_post:
+                    process_and_upload_simulations_task( file )
                 response = { 'status' : 'success' }
             else:
                 response = { 'status' : 'failed' }
             return JsonResponse(response)
-        
     return render(request, 'visualize/upload.html')
 
 def detail(request, simulation_id):
@@ -42,7 +41,7 @@ def index(request):
     return render( request, 'visualize/index.html', context )
 
 
-def _verify_file_existence( post ):
+def _cleanse_post( post ):
 
     """ checks whether the input files sent are found on the server. """
     exists = True
@@ -51,23 +50,31 @@ def _verify_file_existence( post ):
     if not post:
         return False
 
+    # list of files to return
+    out = []
+
     # maybe it has several files
     try:
         files = post.split('\n')
         for f in files:
             if f and not os.path.isdir( f ):
                 exists = False
+            elif f and os.path.isdir( f ):
+                out.append( f )
+
     except Exception as e:
         logging.warning('unable to iterate on post, trying as single file.\nerror msg: %s' % str(e))
         # maybe it has one file
         try:
             if not os.path.isdir( post ):
                 exists = False
+            else:
+                out.append( f )
         except Exception as e:
             logging.warning('unable to use as single file. failing.\nerror msg: %s' % str(e))
             exists = False
 
     # phew, made it thru
     logging.info('exists: %s' % str(exists))
-    return exists
+    return out
 
