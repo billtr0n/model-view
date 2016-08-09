@@ -4,8 +4,7 @@ from celery.utils.log import get_task_logger
 logger = get_task_logger(__name__)
 @shared_task(name='test_task')
 def test(param):
-    print 'tasked executed with params %s' % param
-    return
+    return 'tasked executed with params %s' % param
 
 
 @shared_task(name = "process_simulations_task")
@@ -35,10 +34,11 @@ def process_and_upload_simulations_task( file ):
     import numpy as np
     import pandas as pd
 
-    from util import compute_rupture_velocity, plot_2d_image
+    from util import compute_rupture_velocity, plot_2d_image 
 
     """ Model setup, this will return false in ready method of class when written """
     # parse simulation details into dict
+    print 'processing simulation.'
     home_dir = os.path.dirname(os.path.realpath(__file__)) 
     script_dir = os.path.join(home_dir, 'utils')
     cwd = file      
@@ -127,8 +127,9 @@ def process_and_upload_simulations_task( file ):
             'magnitude' : _read_magnitude( cwd )
         }
     except Exception as e:
-        print str(e)
-        return false
+        logging.error("could not load data-files.")
+        # set state to failed
+        return
 
     """ plot kinematic fields """
     clabel = {
@@ -261,6 +262,7 @@ def process_and_upload_simulations_task( file ):
     one_point = pd.Series( simulation['one_point'] ).to_csv( os.path.join(datadir, 'one_point.csv') )
 
     print 'finished processing %s' % cwd
+    return 
 
 
 def _get_figure( ax ):

@@ -7,6 +7,9 @@ var obj = {};
 
 window.onload = function() {
     $("#file").change(displayUpload);
+    $("#file").click(function() {
+        $("#file").val("");
+    });
     $("#submit").click(onSubmit);
 };
 
@@ -32,7 +35,7 @@ var onSubmit = function(e) {
         data: { post : obj['files'] },
 
         success : function(json) {
-            $("#results").val('');
+            $("#message").val('');
             console.log(json);
             console.log("success");
         },
@@ -51,9 +54,7 @@ var displayUpload = function(e) {
         fr.onload = function(e) {
             try {
                 // console.log( e.target.result );
-                var $newdiv = $("<div id='results'></div>");
-                $("body").append($newdiv);
-                $("#results").append(document.createTextNode(e.target.result))                
+                $("#message").html(document.createTextNode(e.target.result))                
                 if (typeof e.target.result === 'string') {
                     obj['files'] = e.target.result;
                 }

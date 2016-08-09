@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'visualize',
+    'kombu.transport.django',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -123,6 +124,8 @@ STATIC_URL = '/static/'
 
 # CELERY STUFF
 BROKER_URL = 'redis://localhost:6379'
+# BROKER_URL = 'django://localhost:8000'
+# CELERY_RESULT_BACKEND = 'django://'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
