@@ -263,9 +263,54 @@ def process_and_upload_simulations_task( file ):
     data_sample.to_csv( os.path.join(datadir, 'data_sampled.csv') )
     one_point = pd.Series( simulation['one_point'] ).to_csv( os.path.join(datadir, 'one_point.csv') )
 
-    logger.info('committing to database')
-    simulation_form = SimulationForm( simulation['simulation'] )
-    new_simulation = simulation_form.save()
+    logger.info('attempting to commit model to database')
+    sim = Simulation.objects.get(name=simulation['simulation']['name'])
+    if sim:
+        logger.warning('simulation with name %s exists, updating entry.' % simulation['simulation']['name'])
+        simulation_form = SimulationForm( simulation['simulation'], instance = sim )
+    else:
+        logger.info('making new database entry for simulation %s' % simulation['simulation']['name'])
+        simulation_form = SimulationForm( simulation['simulation'])
+    if simulation_form.is_valid():
+        new_simulation = simulation_form.save()
+    else:
+        logger.error('unable to save simulation, aborting.')
+        return
+    
+    # create new forms for various tables
+    # think about what will happen if simulation is updated, maybe if sim isn't empty
+    # we need to grab each row that has foreign_key 
+    parameters_form = ParametersForm( simulation['parameters'] )
+    if parameters_form.is_valid():
+        parameters_form.save(commit=False)
+        parameters_form.simulation = new_simulation
+        parameters_form.save()
+    else:
+        logging.warning('parameters form not valid')
+
+    input_form = SimulationInputForm( simulation['fieldio']['inputs'] )
+    if input_form.is_valid():  
+        input_form.save(commit=False)
+        input_form.simulation = new_simulation
+        input_form.save()
+    else:
+        logging.warning('input form not valid')
+
+    output_form = SimulationOutputForm( simulation['fieldio']['outputs'] )
+    if output_form.is_valid():  
+        output_form.save(commit=False)
+        output_form.simulation = new_simulation
+        output_form.save()
+    else:
+        logging.warning('output form not valid')    
+
+    rupture_form = RuptureParametersForm( simulation['rupture'] )
+    if rupture_form.is_valid():  
+        rupture_form.save(commit=False)
+        rupture_form.simulation = new_simulation
+        rupture_form.save()
+    else:
+        logging.warning('rupture form not valid')
     return 
 
 

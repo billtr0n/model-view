@@ -16,22 +16,22 @@ class SimulationForm(ModelForm):
 class SimulationOutputForm(ModelForm):
     class Meta:
         model = Simulation_Output 
-        fields = '__all__'
+        exclude = ['simulation']
 
 class SimulationInputForm(ModelForm):
     class Meta:
         model = Simulation_Input
-        fields = '__all__'
+        exclude = ['simulation']
 
 class ParametersForm(ModelForm):
     class Meta:
         model = Parameters
-        fields = '__all__'
+        exclude = ['simulation']
 
 class RuptureParametersForm(ModelForm):
     class Meta:
         model = Rupture_Parameters
-        fields = "__all__"
+        exclude = ['simulation']
 
 class UploadFileForm( forms.Form ):
     file = forms.FileField()
