@@ -25,6 +25,16 @@ start django server <br>
 ``` python manage.py runserver ``` <br>
 
 
+### Todo
+* commit models to the database
+* add data-product model to store premade figures
+* develop datastore to store raw data
+* build homepage
+* build models overview page
+* build details page
+* restyle upload page	
+
+
 
 
 

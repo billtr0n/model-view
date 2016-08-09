@@ -1,0 +1,17 @@
+amqp==1.4.9
+anyjson==0.3.3
+billiard==3.3.0.23
+celery==3.1.23
+cycler==0.10.0
+Django==1.5.11
+djangotoolbox==1.8.0
+kombu==3.0.35
+matplotlib==1.5.1
+numpy==1.11.1
+pandas==0.18.1
+pyparsing==2.1.6
+python-dateutil==2.5.3
+pytz==2016.6.1
+redis==2.10.5
+scipy==0.18.0
+six==1.10.0

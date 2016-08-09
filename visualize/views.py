@@ -7,7 +7,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 
 # my includes
 from .models import Simulation
-from .tasks import process_and_upload_simulations_task
+from .tasks import process_and_upload_simulations_task, test
 
 """ upload method will accept a list of folders that need to be operated on. these should be transfered to the server already. 
     after they are done uploading they will redirect to models. new models will be visible from models page. """
@@ -18,6 +18,7 @@ def upload(request):
             clean_post = _cleanse_post( post )
             if clean_post:
                 for file in clean_post:
+                    print file
                     process_and_upload_simulations_task.delay( file )
                 response = { 'status' : 'success' }
             else:
@@ -40,8 +41,7 @@ def index(request):
 
 
 def _cleanse_post( post ):
-
-    """ checks whether the input files sent are found on the server. """
+    """ checks whether the input files sent are valid. aka exist in specified location on server. """
     exists = True
 
     # shortcut, obvious first.
@@ -61,7 +61,7 @@ def _cleanse_post( post ):
                 out.append( f )
 
     except Exception as e:
-        logging.warning('unable to iterate on post, trying as single file.\nerror msg: %s' % str(e))
+        logging.info('unable to iterate on post, trying as single file.\nerror msg: %s' % str(e))
         # maybe it has one file
         try:
             if not os.path.isdir( post ):
@@ -69,7 +69,7 @@ def _cleanse_post( post ):
             else:
                 out.append( f )
         except Exception as e:
-            logging.warning('unable to use as single file. failing.\nerror msg: %s' % str(e))
+            logging.error('unable to use as single file. failing.\nerror msg: %s' % str(e))
             exists = False
 
     # phew, made it thru

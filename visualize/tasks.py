@@ -2,6 +2,7 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 @shared_task(name='test_task')
 def test(param):
+    print 'hi'
     return 'tasked executed with params %s' % param
 
 
