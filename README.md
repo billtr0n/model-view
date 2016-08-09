@@ -4,25 +4,25 @@ simple web-database to store and display dynamic rupture simulations from sord.
 
 ### Starting development server
 
-start redis server
+start redis server <br>
 ``` redis-server & ```
 
-test redis server
+test redis server <br>
 ``` redis-cli ping ```
 
-start celery worker (from pyorogeny directory)
+start celery worker (from pyorogeny directory) <br>
 ``` venv/bin/celery --app=model_database.celeryapp:app worker --loglevel=INFO ```
+<br>
+note: call celery from bin directory in project virtualenv<br>
 
-note: call celery from bin directory in project virtualenv
+make database migrations (only run on initial install)<br>
+``` python manage.py makemigrations ```<br>
 
-make database migrations (only run on initial install)
-``` python manage.py makemigrations ```
+migrate database (only run on initial install)<br>
+``` python manage.py migrate ``` <br>
 
-migrate database (only run on initial install)
-``` python manage.py migrate ``` 
-
-start django server
-``` python manage.py runserver ```
+start django server <br>
+``` python manage.py runserver ``` <br>
 
 
 
