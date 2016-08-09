@@ -4,6 +4,9 @@ simple web-database to store and display dynamic rupture simulations from sord.
 
 ### Starting development server
 
+install requirements<br>
+``` pip install -r requiements.txt ```<br>
+
 start redis server <br>
 ``` redis-server & ```
 
