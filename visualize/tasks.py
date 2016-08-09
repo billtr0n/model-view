@@ -266,37 +266,61 @@ def process_and_upload_simulations_task( file ):
 
     logger.info('attempting to commit model to database')
     sim = Simulation.objects.get(name=simulation['simulation']['name'])
-    # if it doesn't exist
+    
+    # check if simulation with same name exists already
     if sim:
         logger.warning('simulation with name %s exists, updating entry.' % simulation['simulation']['name'])
         simulation_form = SimulationForm( simulation['simulation'], instance = sim )
     else:
         logger.info('making new database entry for simulation %s' % simulation['simulation']['name'])
         simulation_form = SimulationForm( simulation['simulation'])
+
+    # validate simulation form
     if simulation_form.is_valid():
         new_simulation = simulation_form.save()
+        logger.info('saved simulation to database')
     else:
         logger.error('unable to save simulation, aborting.')
         return
     
-    # create new forms for various tables
-    # think about what will happen if simulation is updated, maybe if sim isn't empty
-    # we need to grab each row that has foreign_key 
-    forms = [ SimulationOutputForm, SimulationInputForm, ParametersForm, RuptureParametersForm ]
-    data = [ simulation['fieldio']['outputs'], simulation['fieldio']['inputs'], simulation['parameters'], simulation['rupture'] ]
+    # create new forms for various tables given instance new_simulation 
+    # forms = [ SimulationOutputForm, SimulationInputForm, ParametersForm, RuptureParametersForm ]
+    # data = [ simulation['fieldio']['outputs'], simulation['fieldio']['inputs'], simulation['parameters'], simulation['rupture'] ]
+    forms = [ParametersForm]
+    data = [simulation['parameters']]
+    for k,v in simulation['parameters'].items():
+        print k, v
+    # form should be dict or list of dicts
     for f, d in zip(forms, data):
         _commit_form_with_fk( f, d, new_simulation )
+    
+
+    
 
 def _commit_form_with_fk( form, data, instance ):
-    f = form( data, instance = instance )
-    if f.is_valid():
-        f.save()
+    # we can just commit a dict
+    import logging as logger
+    if isinstance(data, dict):
+        f = form( data, instance = instance )
+        if f.is_valid():
+            m = f.save( commit = False )
+            m.simulation = instance
+            m.save()
+            logger.info('saved to database')
+        else:
+            logger.warning('unable to save form ')
+    # must loop over dicts
     else:
-        logging.warning('unable to save form ')
+        for d in data:
+            f = form( d )
+            if f.is_valid():
+                m = f.save( commit = False )
+                m.simulation = instance
+                m.save()
+                logger.info('saved to database')
+            else:
+                logger.warning('unable to save form')
     return
-
-
-
 
 def _get_figure( ax ):
     return ax[0,0].get_figure()
@@ -398,7 +422,7 @@ def _read_magnitude( cwd ):
         for name in files:
             if name == 'mw':
                 mw = fromfile(os.path.join(root, name),'f')[-1]
-                return { 'mw' : mw }
+                return mw
     raise IOError
 
 def _get_fault_extent( field, nx, nz, dx ):

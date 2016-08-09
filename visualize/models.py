@@ -67,7 +67,7 @@ class Parameters( models.Model ):
 
 class Rupture_Parameters( models.Model ):
     simulation = models.OneToOneField( Simulation, on_delete=models.CASCADE )
-    fault_extent = models.TextField()
-    magnitude = models.TextField()
-    del_tau = models.TextField()
+    fault_extent = models.FloatField()
+    magnitude = models.FloatField()
+    del_tau = models.FloatField()
 
