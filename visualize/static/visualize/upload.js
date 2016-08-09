@@ -35,9 +35,8 @@ var onSubmit = function(e) {
         data: { post : obj['files'] },
 
         success : function(json) {
-            $("#message").val('');
+            $("#message").val(json);
             console.log(json);
-            console.log("success");
         },
 
         error : function(json) {

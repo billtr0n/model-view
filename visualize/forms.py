@@ -6,24 +6,32 @@ from django import forms
 from django.forms import ModelForm
 
 # user defines imports
-from .models import Simulation, Data_Product, Parameters
+from .models import Simulation, Simulation_Input, Simulation_Output, Parameters, Rupture_Parameters
 
-class SimulationModelForm(ModelForm):
+class SimulationForm(ModelForm):
     class Meta:
         model = Simulation
-        exclude = ['comments','upload_date','user']
+        exclude = ['comments','upload_date']
 
-class DataProductModelForm(ModelForm):
+class SimulationOutputForm(ModelForm):
     class Meta:
-        model = Data_Product
+        model = Simulation_Output 
         fields = '__all__'
 
-class ParametersModelForm(ModelForm):
+class SimulationInputForm(ModelForm):
+    class Meta:
+        model = Simulation_Input
+        fields = '__all__'
+
+class ParametersForm(ModelForm):
     class Meta:
         model = Parameters
         fields = '__all__'
 
-
+class RuptureParametersForm(ModelForm):
+    class Meta:
+        model = Rupture_Parameters
+        fields = "__all__"
 
 class UploadFileForm( forms.Form ):
     file = forms.FileField()
@@ -61,26 +69,3 @@ class UploadFileForm( forms.Form ):
         except Exception as e:
             print "unable to read upload file. make sure there is one directory per line."
         return files
-
-
-
-        
-
-            
-            
-                
-
-            
-        
-
-    
-        
-
-        
-
-
-
-
-
-
-

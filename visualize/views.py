@@ -7,9 +7,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 
 # my includes
 from .models import Simulation
-from .forms import UploadFileForm
-from .tasks import process_and_upload_simulations_task, test
-
+from .tasks import process_and_upload_simulations_task
 
 """ upload method will accept a list of folders that need to be operated on. these should be transfered to the server already. 
     after they are done uploading they will redirect to models. new models will be visible from models page. """

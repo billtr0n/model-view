@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'visualize',
+    'visualize.apps.VisualizeConfig',
     'kombu.transport.django',
     'django.contrib.admin',
     'django.contrib.auth',

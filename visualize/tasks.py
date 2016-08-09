@@ -1,7 +1,5 @@
 from celery import shared_task
 from celery.utils.log import get_task_logger
-
-logger = get_task_logger(__name__)
 @shared_task(name='test_task')
 def test(param):
     return 'tasked executed with params %s' % param
@@ -28,25 +26,29 @@ def process_and_upload_simulations_task( file ):
         Success. Task is expected to fail elegantly and report any issues to the log, but if for some reason
         it does not this function will return false.
     """
+    
 
-    import logging, os, shutil, subprocess
+    import os, shutil, subprocess
    
     import numpy as np
     import pandas as pd
 
     from util import compute_rupture_velocity, plot_2d_image 
 
+    from .forms import *
+
     """ Model setup, this will return false in ready method of class when written """
     # parse simulation details into dict
-    print 'processing simulation.'
+    logger = get_task_logger(__name__)
     home_dir = os.path.dirname(os.path.realpath(__file__)) 
     script_dir = os.path.join(home_dir, 'utils')
-    cwd = file      
+    cwd = file
     try:
-        simulation = _parse_simulation_details( cwd, write=False )
+        simulation = _parse_simulation_details( cwd )
+        # get necessary params for evaluation
     except:
-        logging.error('unable to parse meta.py file. skipping simulation.')
-        return False
+        logger.error('unable to parse meta.py file.')
+        return
 
     # copy necessary files
     # copy entire utils directory 
@@ -57,9 +59,8 @@ def process_and_upload_simulations_task( file ):
         shutil.copy( os.path.join(script_dir, 'nscore.R'), cwd )
     except Exception as e:
         print str(e)
-        return False
+        return 
 
-    # get necessary params for evaluation
     try:
         nn = simulation['parameters']['nn']
         cwd = cwd
@@ -76,12 +77,12 @@ def process_and_upload_simulations_task( file ):
             os.mkdir( datadir )
     except Exception as e:
         print str(e)
-        return False
+        return
 
     # this should be more general to plot any/all of the fields output
     # interface with fieldnames.py to write little blurb about each fig
     # for now, these can be hard coded.
-    logging.info('beginning work on %s' % outdir)
+    logger.info('beginning work on %s' % outdir)
     files = {
         'su1'  : os.path.join( outdir, 'su1' ),
         'su2'  : os.path.join( outdir, 'su2' ),
@@ -90,7 +91,7 @@ def process_and_upload_simulations_task( file ):
         'tsm'  : os.path.join( outdir, 'tsm' ),
         'tnm'  : os.path.join( outdir, 'tnm' ),
     }
-    logging.info( 'working with files: %s' % ', '.join( files.keys() ) )
+    logger.info( 'working with files: %s' % ', '.join( files.keys() ) )
 
     # load files into dict
     # TODO: change this functionality to accept any field in simulation['fieldio']['inputs']
@@ -124,10 +125,11 @@ def process_and_upload_simulations_task( file ):
         # store information about the rupture on the fault
         simulation['rupture'] = {
             'fault_extent' : _get_fault_extent( data['psv'], nx, nz, dx ),
-            'magnitude' : _read_magnitude( cwd )
+            'magnitude' : _read_magnitude( cwd ),
+            'del_tau' : data['dtau'].mean()
         }
     except Exception as e:
-        logging.error("could not load data-files.")
+        logger.error("could not load data-files.")
         # set state to failed
         return
 
@@ -256,12 +258,14 @@ def process_and_upload_simulations_task( file ):
 
     """ write out csv files """
     # print 'writing csv files'
-    logging.info('writing csv files')
+    logger.info('writing csv files')
     data_trimmed.to_csv( os.path.join(datadir, 'data_trimmed.csv') )
     data_sample.to_csv( os.path.join(datadir, 'data_sampled.csv') )
     one_point = pd.Series( simulation['one_point'] ).to_csv( os.path.join(datadir, 'one_point.csv') )
 
-    print 'finished processing %s' % cwd
+    logger.info('committing to database')
+    simulation_form = SimulationForm( simulation['simulation'] )
+    new_simulation = simulation_form.save()
     return 
 
 
@@ -286,11 +290,12 @@ def _parse_simulation_details( cwd, write = False ):
     import logging
     # data structure for simulation.
     data = {}
+    data['simulation'] = {}
     data['parameters'] = {}
     data['fieldio'] = {}
     # read meta.py file
     try:
-        # this is dangerous, should change to json 
+        # this is dangerous, should change to xml, or yaml
         exec( open( os.path.join(cwd, 'meta.py')).read() )
         # get list of local variables aka namespace of meta.py
         lvars = locals()
@@ -313,9 +318,12 @@ def _parse_simulation_details( cwd, write = False ):
                 json.dump(data, fh, indent=2)
     
     except Exception as e:
-        logging.error('cannot read simulation details. error: %s' % str(e)) 
+        logger.error('cannot read simulation details. error: %s' % str(e)) 
         return data
     
+    # to be consistent with models
+    data['simulation']['name'] = data['parameters']['name']
+    data['simulation']['user'] = data['parameters']['user']
     return data
 
 """turns meta.py file into json object using eval, this is very risky, but I trust myself"""
