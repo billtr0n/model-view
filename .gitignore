@@ -2,4 +2,5 @@
 README
 *.pyc
 **/need_to_be_incorporated/
+venv/
 todo

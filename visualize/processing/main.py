@@ -13,8 +13,10 @@ from tasks.dynamic_rupture_task import process_dynamic_rupture_simulation
 
 def process_and_upload_simulations( files ):
     """ wrapper used to process dynamic rupture simulations """
+    print files
     home_dir = os.path.dirname(os.path.realpath(__file__))
-    params = { 'home_dir' : home_dir, 
+    params = { 
+               'home_dir' : home_dir, 
                'script_dir' : os.path.join(home_dir, 'utils')
              }
              
@@ -31,7 +33,7 @@ def process_and_upload_simulations( files ):
         eventually build parameter file that lets user specify what tasks to run, etc.
      """
     individual_tasks = [
-                        process_dynamic_rupture_simulation,
+                        process_dynamic_rupture_simulation
                         # plot_gmpe,
                         # calc_gmpe,
                         # one_point_statistics,
@@ -39,8 +41,7 @@ def process_and_upload_simulations( files ):
                        ]
 
     """ apply tasks to group """
-    if individual_tasks:
-        _queue_individual_tasks( group, individual_tasks, files, params )
+    _queue_individual_tasks( group, individual_tasks, files, params )
 
     # """ define and apply tasks that are applied to all simulations """
     # group.add_task_to_queue( SimpleTask( plot_gmpe_group_bias, params=params ) )
@@ -58,12 +59,12 @@ def _queue_individual_tasks( group, tasks, files, params ):
         tasks (list) : list of tasks 
         params (dict) : 
     """
-
-    for file in files:
-        print file
-        for task in tasks:
-            params['cwd'] = file
-            task = SimpleTask( task, params=params )
-            if task.ready():
-                group.add_task_to_queue( task )
+    if tasks and files:
+        for file in files:
+            if file:
+                for task in tasks:
+                    params['cwd'] = file
+                    task = SimpleTask( task, params=params )
+                    if task.ready():
+                        group.add_task_to_queue( task )
 

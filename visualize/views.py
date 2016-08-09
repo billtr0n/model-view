@@ -45,7 +45,6 @@ def index(request):
 def _verify_file_existence( post ):
 
     """ checks whether the input files sent are found on the server. """
-
     exists = True
 
     # shortcut, obvious first.

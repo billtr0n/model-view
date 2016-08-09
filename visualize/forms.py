@@ -11,8 +11,7 @@ from .models import Simulation
 class SimulationModelForm(ModelForm):
     class Meta:
         model = Simulation
-        exclude = ['tags', 'comments',
-                   'upload_date', 'user']
+        exclude = ['comments','upload_date', 'user']
 
 class UploadFileForm( forms.Form ):
     file = forms.FileField()

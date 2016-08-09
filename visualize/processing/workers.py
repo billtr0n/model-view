@@ -27,8 +27,9 @@ class SimpleTask( object ):
         if hasattr(task, '__call__'):
             self.task = task
         else:
-            print 'task should be a function.'
+            print 'task should be like a function.'
         self.params = params
+        print self.params
 
     def execute(self):
         self.task( self.params )

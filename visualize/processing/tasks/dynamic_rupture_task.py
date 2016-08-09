@@ -29,6 +29,7 @@ def process_dynamic_rupture_simulation( params ):
     """ Model setup, this will return false in ready method of class when written """
     # parse simulation details into dict
     try:
+        print params['cwd']
         simulation = _parse_simulation_details( params['cwd'], write=False )
     except:
         logging.error('unable to parse meta.py file. skipping simulation.')
@@ -126,7 +127,7 @@ def process_dynamic_rupture_simulation( params ):
         'vrup': r'$v_{rup}$ (m/s)',
         'sum' : r'$|u| (m)$',
         'mu0' : r'$\mu_0$',
-        'dtau' : r'$\Delta \tau$'
+        'dtau' : r'$\Delta \tau$' # needs some work
     }
     
     for field in data:

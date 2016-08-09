@@ -9,3 +9,4 @@ def process_and_upload_simulations_task( files ):
 	"""processes simulations uploaded from user"""
 	logger.info("processed simulation.")
 	return process_and_upload_simulations( files )
+	
