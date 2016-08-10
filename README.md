@@ -30,7 +30,7 @@ start django server <br>
 
 ### Todo
 * commit models to the database
-..* status: dicts containing fields need to be verified so data in dict matches model
+  * status: dicts containing fields need to be verified so data in dict matches model
 * add data-product model to store premade figures
 * develop datastore to store raw data
 * build homepage
