@@ -18,7 +18,6 @@ def upload(request):
             clean_post = _cleanse_post( post )
             if clean_post:
                 for file in clean_post:
-                    print file
                     process_and_upload_simulations_task.delay( file )
                 response = { 'status' : 'success' }
             else:

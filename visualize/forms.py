@@ -26,7 +26,7 @@ class SimulationInputForm(ModelForm):
 class ParametersForm(ModelForm):
     class Meta:
         model = Parameters
-        fields = '__all__'
+        exclude = ['simulation']
 
 class RuptureParametersForm(ModelForm):
     class Meta:
