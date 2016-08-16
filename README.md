@@ -21,7 +21,7 @@ note: call celery from bin directory in project virtualenv<br>
 make database migrations (only run on initial install)<br>
 ``` python manage.py makemigrations ```<br>
 
-migrate database (only run on initial install)<br>
+migrate database (only run when necessary)<br>
 ``` python manage.py migrate ``` <br>
 
 start django server <br>
