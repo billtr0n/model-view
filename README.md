@@ -36,7 +36,8 @@ start django server <br>
 * build homepage
 * build models overview page
 * build details page
-* restyle upload page	
+* restyle upload page
+* add nonexistent required directories
 
 
 
