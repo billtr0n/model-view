@@ -12,7 +12,7 @@ class Simulation( models.Model ):
     comments = models.TextField(default='', blank=True)
     
     def get_fields(self):
-        ignore = []
+        ignore = ['id']
         fields = [(field.name, field.value_to_string(self)) for field in Simulation._meta.fields if field.name not in ignore and field.value_to_string(self)]
         return fields
 
@@ -67,7 +67,13 @@ class Parameters( models.Model ):
     tm0 = models.TextField(null=True, blank=True)
     tmnucl = models.TextField(null=True, blank=True)
     trelax = models.TextField(null=True, blank=True)
-    simulation = models.OneToOneField( Simulation, on_delete=models.CASCADE )
+    simulation = models.OneToOneField( Simulation, on_delete=models.CASCADE, 
+                            primary_key = True )
+
+    def get_fields(self):
+        ignore = ['simulation']
+        fields = [(field.name, field.value_to_string(self)) for field in Parameters._meta.fields if field.name not in ignore and field.value_to_string(self)]
+        return fields
 
     def __unicode__(self):
         return self.simulation.name + " parameters"

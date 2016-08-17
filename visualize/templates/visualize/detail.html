@@ -5,18 +5,22 @@
 <link rel="stylesheet" type="text/css" href="{% static 'visualize/detail.css' %}" />
 </head>
 <body>
-<h2>Simulation Details</h2>
+Click <a href="{% url 'visualize:index' %}">here</a> to go back to the index.
+<h2>Simulation {{sim.name}} </h2>
+{% if par %}
+<h2>Simulation Parameters</h2>
 <table>
 <tr>
-    <th>Parameter</th>
-    <th>Value</th>
+	<th>Parameters</th>
+	<th>Value</th>
 </tr>
-{% for name, value in simulation.get_fields %}
+{% for name, value in par.get_fields %}
 <tr>
     <td>{{ name }}</td>
     <td>{{ value }}</td>
 </tr>
 {% endfor %}
 </table>
+{% endif %}
 </body>
 </html>

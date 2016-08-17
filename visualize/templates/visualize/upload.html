@@ -5,6 +5,8 @@
 <link rel="stylesheet" type="text/css" href="{% static 'visualize/upload.css' %}" />
 </head>
 <body>
+<div><p>Click <a href="{% url 'visualize:index' %}">here</a> to return to the index.
+</p></div
 <div id='form'>
 <form method="post">
 	{% csrf_token %}

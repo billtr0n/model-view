@@ -28,10 +28,16 @@ class ParametersForm(ModelForm):
         model = Parameters
         exclude = ['simulation']
 
+    def __unicode__(self):
+        return 'parameters model'
+
 class RuptureParametersForm(ModelForm):
     class Meta:
         model = Rupture_Parameters
         exclude = ['simulation']
+
+    def __unicode__(self):
+        return 'rupture parameters model'
 
 class UploadFileForm( forms.Form ):
     file = forms.FileField()

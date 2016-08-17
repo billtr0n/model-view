@@ -1,5 +1,6 @@
 from celery import shared_task
 from celery.utils.log import get_task_logger
+
 @shared_task(name='test_task')
 def test(param):
     print 'hi'
@@ -98,164 +99,168 @@ def process_and_upload_simulations_task( file ):
     # load files into dict
     # TODO: change this functionality to accept any field in simulation['fieldio']['inputs']
     # TODO: Make simulation a class. right now i didn't, bc it just stores data no functionality needed
-    # try:
-    #     ex = dx * nx
-    #     ez = dx * nz
-    #     x = np.arange( 0, ex, dx )
-    #     z = np.arange( 0, ez, dx )
-    #     xx, zz = np.meshgrid( x, z )
-    #     material = np.loadtxt( os.path.join(cwd, 'bbp1d_1250_dx_25.asc') )
-    #     vs = material[:,2]*1e3
-    #     data = {
-    #         'x'    : xx,
-    #         'z'    : zz,
-    #         'su1'  : np.fromfile( files['su1'], dtype=np.float32 ).reshape([ nz, nx ]),
-    #         'su2'  : np.fromfile( files['su2'], dtype=np.float32 ).reshape([ nz, nx ]),
-    #         'trup' : np.fromfile( files['trup'], dtype=np.float32 ).reshape([ nz, nx ]),
-    #         'psv'  : np.fromfile( files['psv'], dtype=np.float32 ).reshape([ nz, nx ]),
-    #         'tsm'  : np.fromfile( files['tsm'], dtype=np.float32, count=nx*nz ).reshape([ nz, nx ]) / 1e6, # read initial shear stresses
-    #         'tnm'  : np.fromfile( files['tnm'], dtype=np.float32, count=nx*nz ).reshape([ nz, nx ]) / 1e6, # read initial normal stresses
-    #     }
+    try:
+        ex = dx * nx
+        ez = dx * nz
+        x = np.arange( 0, ex, dx )
+        z = np.arange( 0, ez, dx )
+        xx, zz = np.meshgrid( x, z )
+        material = np.loadtxt( os.path.join(cwd, 'bbp1d_1250_dx_25.asc') )
+        vs = material[:,2]*1e3
+        data = {
+            'x'    : xx,
+            'z'    : zz,
+            'su1'  : np.fromfile( files['su1'], dtype=np.float32 ).reshape([ nz, nx ]),
+            'su2'  : np.fromfile( files['su2'], dtype=np.float32 ).reshape([ nz, nx ]),
+            'trup' : np.fromfile( files['trup'], dtype=np.float32 ).reshape([ nz, nx ]),
+            'psv'  : np.fromfile( files['psv'], dtype=np.float32 ).reshape([ nz, nx ]),
+            'tsm'  : np.fromfile( files['tsm'], dtype=np.float32, count=nx*nz ).reshape([ nz, nx ]) / 1e6, # read initial shear stresses
+            'tnm'  : np.fromfile( files['tnm'], dtype=np.float32, count=nx*nz ).reshape([ nz, nx ]) / 1e6, # read initial normal stresses
+        }
         
-    #     # calculate some things
-    #     tsm_field = (item for item in simulation['fieldio']['outputs'] if item['field'] == "tsm").next()
-    #     data['vrup'] = compute_rupture_velocity( data['trup'], dx ) / vs[:-1].repeat(nx).reshape([nz,nx])
-    #     data['sum']  = np.sqrt( data['su1']**2 + data['su2']**2 )
-    #     data['mu0']  = data['tsm'] / np.absolute(data['tnm'])
-    #     data['dtau'] = _compute_stress_drop( files['tsm'], tsm_field['shape'] )
+        # calculate some things
+        tsm_field = (item for item in simulation['fieldio']['outputs'] if item['field'] == "tsm").next()
+        data['vrup'] = compute_rupture_velocity( data['trup'], dx ) / vs[:-1].repeat(nx).reshape([nz,nx])
+        data['sum']  = np.sqrt( data['su1']**2 + data['su2']**2 )
+        data['mu0']  = data['tsm'] / np.absolute(data['tnm'])
+        data['dtau'] = _compute_stress_drop( files['tsm'], tsm_field['shape'] )
 
-    #     # store information about the rupture on the fault
-    #     simulation['rupture'] = {
-    #         'fault_extent' : _get_fault_extent( data['psv'], nx, nz, dx ),
-    #         'magnitude' : _read_magnitude( cwd ),
-    #         'del_tau' : data['dtau'].mean()
-    #     }
-    # except Exception as e:
-    #     logger.error("could not load data-files.")
-    #     # set state to failed
-    #     return
+        # store information about the rupture on the fault
+        simulation['rupture'] = {
+            'fault_extent' : _get_fault_extent( data['psv'], nx, nz, dx ),
+            'magnitude'    : _read_magnitude( cwd ),
+            'del_tau'      : data['dtau'].mean()
+        }
+    except Exception as e:
+        logger.error("could not load data-files.")
+        # set state to failed
+        return
 
-    # """ plot kinematic fields """
-    # clabel = {
-    #     'su1' : r'$u_x$ (m)',
-    #     'su2' : r'$u_z$ (m)',
-    #     'trup': r'$t_{rup}$ (s)',
-    #     'psv' : r'$V_{peak} (m/s)$',
-    #     'tsm' : r'$|\tau_s| (MPa)$',
-    #     'tnm' : r'$|\tau_n| (MPa)$',
-    #     'vrup': r'$v_{rup}$ (m/s)',
-    #     'sum' : r'$|u| (m)$',
-    #     'mu0' : r'$\mu_0$',
-    #     'dtau' : r'$\Delta \tau$' # needs some work
-    # }
+    """ plot kinematic fields """
+    clabel = {
+        'su1' : r'$u_x$ (m)',
+        'su2' : r'$u_z$ (m)',
+        'trup': r'$t_{rup}$ (s)',
+        'psv' : r'$V_{peak} (m/s)$',
+        'tsm' : r'$|\tau_s| (MPa)$',
+        'tnm' : r'$|\tau_n| (MPa)$',
+        'vrup': r'$v_{rup}$ (m/s)',
+        'sum' : r'$|u| (m)$',
+        'mu0' : r'$\mu_0$',
+        'dtau' : r'$\Delta \tau$' # needs some work
+    }
     
-    # for field in data:
-    #     if field not in ['x','z']:
-    #         if field in ['sum','su1','su2']:
-    #             inp = { 'data'    : data[field], 
-    #                     'contour' : data['trup'] }
-    #             plot_2d_image( inp, filename=os.path.join(figdir, field + '.png'),
-    #                 nx=nx, nz=nz, dx=dx*1e-3, clabel=clabel[field], xlabel='Distance (km)', ylabel='Depth (km)', 
-    #                 surface_plot=True, contour=True )
-    #         elif field == 'vrup':
-    #             plot_2d_image( data[field], filename=os.path.join(figdir, field + '.png'),
-    #                 nx=nx, nz=nz, dx=dx*1e-3, clabel=clabel[field], xlabel='Distance (km)', ylabel='Depth (km)', 
-    #                 surface_plot=False, contour=False, clim = [0.5, 1.0] )
-    #         else:
-    #             plot_2d_image( data[field], filename=os.path.join(figdir, field + '.png'),
-    #                     nx=nx, nz=nz, dx=dx*1e-3, clabel=clabel[field], xlabel='Distance (km)', ylabel='Depth (km)', 
-    #                     surface_plot=False, contour=False )
+    for field in data:
+        if field not in ['x','z']:
+            if field in ['sum','su1','su2']:
+                inp = { 'data'    : data[field], 
+                        'contour' : data['trup'] }
+                plot_2d_image( inp, filename=os.path.join(figdir, field + '.png'),
+                    nx=nx, nz=nz, dx=dx*1e-3, clabel=clabel[field], xlabel='Distance (km)', ylabel='Depth (km)', 
+                    surface_plot=True, contour=True )
+            elif field == 'vrup':
+                plot_2d_image( data[field], filename=os.path.join(figdir, field + '.png'),
+                    nx=nx, nz=nz, dx=dx*1e-3, clabel=clabel[field], xlabel='Distance (km)', ylabel='Depth (km)', 
+                    surface_plot=False, contour=False, clim = [0.5, 1.0] )
+            else:
+                plot_2d_image( data[field], filename=os.path.join(figdir, field + '.png'),
+                        nx=nx, nz=nz, dx=dx*1e-3, clabel=clabel[field], xlabel='Distance (km)', ylabel='Depth (km)', 
+                        surface_plot=False, contour=False )
 
-    # """ calculate one-point statistics 
-    # mask unwanted values 
-    #     1) inside hypocenter 
-    #     2) inside velocity-strengthening 
-    #     3) where super-shear 
-    #     4) within rupturing area on the fault
+    """ calculate one-point statistics 
+    mask unwanted values 
+        1) inside hypocenter 
+        2) inside velocity-strengthening 
+        3) where super-shear 
+        4) within rupturing area on the fault
 
-    # compute slip.mean(), slip.std(), psv.mean(), psv.std(), vrup.mean(), vrup.std(), commit to data structure
-    # """
+    compute slip.mean(), slip.std(), psv.mean(), psv.std(), vrup.mean(), vrup.std(), commit to data structure
+    """
     
-    # include = ['sum', 'vrup', 'psv', 'mu0', 'x', 'z', 'dtau']
-    # temp = {}
-    # for key in data:
-    #     if key in include:
-    #         temp[key] = data[key].ravel()
+    include = ['sum', 'vrup', 'psv', 'mu0', 'x', 'z', 'dtau']
+    temp = {}
+    for key in data:
+        if key in include:
+            temp[key] = data[key].ravel()
 
-    # # write old data
-    # data = pd.DataFrame( data = temp )
+    # write old data
+    data = pd.DataFrame( data = temp )
     
-    # rcrit = 4000
-    # """ kind of complex?, but it crops the source region and some other obvious things.  """
-    # data_trimmed =  pd.concat(
-    #                 [ data[
-    #                  ( ( (data['x'] > ihypo[0]-rcrit) & (data['x'] < ihypo[0]+rcrit) )   & 
-    #                    ( (data['z'] < ihypo[1]-rcrit) | (data['z'] > ihypo[1]+rcrit) ) ) &
-    #                 ( (data['z'] > 4000) & (data['z'] < 15000) ) &
-    #                 ( (data['vrup'] < 1.0) & (data['vrup'] > 0.0) ) &
-    #                 ( data['psv'] > 0.4 ) ],
+    rcrit = 2500 
+    print 1
+    """ kind of complex?, but it crops the source region and some other obvious things.  """
+    data_trimmed =  pd.concat(
+                    [ data[
+                     ( ( (data['x'] > ihypo[0]-rcrit) & (data['x'] < ihypo[0]+rcrit) )   & 
+                       ( (data['z'] < ihypo[1]-rcrit) | (data['z'] > ihypo[1]+rcrit) ) ) &
+                    ( (data['z'] > 0) & (data['z'] < 15000) ) &
+                    ( (data['vrup'] < 1.0) & (data['vrup'] > 0.0) ) &
+                    ( data['psv'] > 0.4 ) ],
 
-    #                 data[((data['x'] < ihypo[0]-rcrit) | (data['x'] > ihypo[0]+rcrit)) &
-    #                 ( (data['z'] > 4000) & (data['z'] < 15000) ) &
-    #                 ( data['psv'] > 0.4 ) &
-    #                 ( (data['vrup'] < 1.0) & data['vrup'] > 0.0 )] ]).drop_duplicates()
+                    data[((data['x'] < ihypo[0]-rcrit) | (data['x'] > ihypo[0]+rcrit)) &
+                    ( (data['z'] > 0) & (data['z'] < 15000) ) &
+                    ( data['psv'] > 0.4 ) &
+                    ( (data['vrup'] < 1.0) & data['vrup'] > 0.0 )] ]).drop_duplicates()
 
 
-    # # take small sample of the data
-    # data_sample = data_trimmed.sample( n=10000 )
+    # take small sample of the data
+    print 2
+    print len(data_trimmed)
+    data_sample = data_trimmed.sample( n=10000 )
+    print 3
+    # store one-point statistics
+    simulation['one_point'] = {
 
-    # # store one-point statistics
-    # simulation['one_point'] = {
+        # same sampled version
+        'avg_slip_tr': data_trimmed['sum'].mean(),
+        'avg_psv_tr':  data_trimmed['psv'].mean(),
+        'avg_vrup_tr': data_trimmed['vrup'].mean(),
+        'std_slip_tr': data_trimmed['sum'].std(),
+        'std_psv_tr': data_trimmed['psv'].std(),
+        'std_vrup_tr': data_trimmed['vrup'].std(),
 
-    #     # same sampled version
-    #     'avg_slip_tr': data_trimmed['sum'].mean(),
-    #     'avg_psv_tr':  data_trimmed['psv'].mean(),
-    #     'avg_vrup_tr': data_trimmed['vrup'].mean(),
-    #     'std_slip_tr': data_trimmed['sum'].std(),
-    #     'std_psv_tr': data_trimmed['psv'].std(),
-    #     'std_vrup_tr': data_trimmed['vrup'].std(),
+        # save sampled version
+        'avg_slip_sa': data_sample['sum'].mean(),
+        'avg_psv_sa':  data_sample['psv'].mean(),
+        'avg_vrup_sa': data_sample['vrup'].mean(),
+        'std_slip_sa': data_sample['sum'].std(),
+        'std_psv_sa': data_sample['psv'].std(),
+        'std_vrup_sa': data_sample['vrup'].std(),
 
-    #     # save sampled version
-    #     'avg_slip_sa': data_sample['sum'].mean(),
-    #     'avg_psv_sa':  data_sample['psv'].mean(),
-    #     'avg_vrup_sa': data_sample['vrup'].mean(),
-    #     'std_slip_sa': data_sample['sum'].std(),
-    #     'std_psv_sa': data_sample['psv'].std(),
-    #     'std_vrup_sa': data_sample['vrup'].std(),
+        # save median version
+        'med_slip_sa': data_sample['sum'].median(),
+        'med_psv_sa':  data_sample['psv'].median(),
+        'med_vrup_sa': data_sample['vrup'].median(),
+        'mad_slip_sa': data_sample['sum'].mad(),
+        'mad_psv_sa': data_sample['psv'].mad(),
+        'mad_vrup_sa': data_sample['vrup'].mad(),
 
-    #     # save median version
-    #     'med_slip_sa': data_sample['sum'].median(),
-    #     'med_psv_sa':  data_sample['psv'].median(),
-    #     'med_vrup_sa': data_sample['vrup'].median(),
-    #     'mad_slip_sa': data_sample['sum'].mad(),
-    #     'mad_psv_sa': data_sample['psv'].mad(),
-    #     'mad_vrup_sa': data_sample['vrup'].mad(),
+        # save median of stress drop
+        'med_del_tau': data_sample['dtau'].median()
 
-    #     # save median of stress drop
-    #     'med_del_tau': data_sample['dtau'].median()
+    }
+    print 4
 
-    # }
+    # calculate two-point statistics
+    """ stored in directory vario """
+    subprocess.call(["Rscript", os.path.join(cwd, "analysis.R"), cwd])
 
-    # # calculate two-point statistics
-    # """ stored in directory vario """
-    # subprocess.call(["Rscript", os.path.join(cwd, "analysis.R"), cwd])
+    # compute histograms 
+    ax = data_sample.hist( 
+            bins = np.sqrt(len(data_sample.index)), 
+            normed = 1, 
+            column = ['mu0','sum','psv','vrup'], 
+    )
+    fig = _get_figure( ax )
+    fig.savefig( os.path.join( figdir, 'hist.png' ), dpi=300 )
 
-    # # compute histograms 
-    # ax = data_sample.hist( 
-    #         bins = np.sqrt(len(data_sample.index)), 
-    #         normed = 1, 
-    #         column = ['mu0','sum','psv','vrup'], 
-    # )
-    # fig = _get_figure( ax )
-    # fig.savefig( os.path.join( figdir, 'hist.png' ), dpi=300 )
-
-    # ax = np.log10(data_sample).hist( 
-    #         bins = np.sqrt(len(data_sample.index)), 
-    #         normed = 1, 
-    #         column = ['mu0','sum','psv','vrup'], 
-    # )
-    # fig = _get_figure( ax )
-    # fig.savefig( os.path.join( figdir, 'hist_log.png' ), dpi=300 )
+    ax = np.log10(data_sample).hist( 
+            bins = np.sqrt(len(data_sample.index)), 
+            normed = 1, 
+            column = ['mu0','sum','psv','vrup'], 
+    )
+    fig = _get_figure( ax )
+    fig.savefig( os.path.join( figdir, 'hist_log.png' ), dpi=300 )
 
 
     """ write out csv files """
@@ -265,8 +270,8 @@ def process_and_upload_simulations_task( file ):
     # data_sample.to_csv( os.path.join(datadir, 'data_sampled.csv') )
     # one_point = pd.Series( simulation['one_point'] ).to_csv( os.path.join(datadir, 'one_point.csv') )
 
-    # logger.info('attempting to commit model to database')
-    sim = Simulation.objects.get(name=simulation['simulation']['name'])
+    logger.info('saving to database')
+    sim = _get_or_none( Simulation, simulation['parameters']['name'] )
     
     # check if simulation with same name exists already
     if sim:
@@ -287,25 +292,34 @@ def process_and_upload_simulations_task( file ):
     # create new forms for various tables given instance new_simulation 
     forms = [ ParametersForm, ]
 
-    # get representation of variables to store as text in db
-    data = [ {key: val.__repr__() for (key, val) in simulation['parameters'].items()} ,]
+    # get text representation of variables to store as text in db
+    data = [{key: val.__repr__() for (key, val) in simulation['parameters'].items()}, ]
 
-    # form should be dict or list of dicts
-
+    
+    # commit the parameters form
     for f, d in zip(forms, data):
-        _commit_form_with_fk( f, d, new_simulation )
+        _commit_form_with_fk( f, d, new_simulation ) 
+
+def _get_or_none( model_class, name, **kwargs ):
+    from django.core.exceptions import ObjectDoesNotExist
+    try:
+        query = model_class.objects.get( name = name, **kwargs )
+    except ObjectDoesNotExist:
+        query = None
+    return query
+
 
 
 def _commit_form_with_fk( form, data, instance ):
     # we can just commit a dict
     import logging as logger
     if isinstance(data, dict):
-        f = form( data, instance = instance )
+        f = form( data )
         if f.is_valid():
             m = f.save( commit = False )
             m.simulation = instance
             m.save()
-            logger.info('saved to database')
+            logger.info('saved %s to database' % str(form))
         else:
             print f.errors
     # must loop over dicts
