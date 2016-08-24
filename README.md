@@ -1,5 +1,5 @@
 # pyOrogeny
-simple web-database to store and display dynamic rupture simulations from sord. 
+simple web-database to store and display dynamic rupture simulations from sord. initial start for fully web-based dynamic rupture simulation platform.
 
 
 ### Starting development server
@@ -21,7 +21,7 @@ note: call celery from bin directory in project virtualenv<br>
 make database migrations (only run on initial install)<br>
 ``` python manage.py makemigrations ```<br>
 
-migrate database (only run on initial install)<br>
+migrate database (only run when necessary)<br>
 ``` python manage.py migrate ``` <br>
 
 start django server <br>
@@ -30,13 +30,15 @@ start django server <br>
 
 ### Todo
 * commit models to the database
-..* status: dicts containing fields need to be verified so data in dict matches model
-* add data-product model to store premade figures
+  * status: sim and parameters good,
+  * need to add simulation outputs and inputs
+  * add data-product model to store premade figures
 * develop datastore to store raw data
 * build homepage
 * build models overview page
 * build details page
-* restyle upload page	
+* restyle upload page
+* add nonexistent required directories
 
 
 

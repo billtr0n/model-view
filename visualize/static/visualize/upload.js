@@ -35,7 +35,10 @@ var onSubmit = function(e) {
         data: { post : obj['files'] },
 
         success : function(json) {
-            $("#message").val(json);
+            $("#message").html(json['status']);
+            if (json['status'] == 'success') {
+                window.location = '/models';
+            }
             console.log(json);
         },
 

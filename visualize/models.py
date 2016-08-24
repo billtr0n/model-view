@@ -12,11 +12,15 @@ class Simulation( models.Model ):
     comments = models.TextField(default='', blank=True)
     
     def get_fields(self):
-        ignore = ['parameters_ptr', 'id'] 
+        ignore = ['id']
         fields = [(field.name, field.value_to_string(self)) for field in Simulation._meta.fields if field.name not in ignore and field.value_to_string(self)]
         return fields
 
-    def unicode(self):
+    def get_field_names(self):
+        ignore = ['id']
+        fields = [field.name for field in Simulation._meta.fields if field.name not in ignore]
+
+    def __unicode__(self):
         return self.name
     
 # Stores simulation output data
@@ -33,7 +37,7 @@ class Simulation_Output( models.Model ):
     shape = models.CharField(max_length=200)
     indices = models.CharField(max_length=200)
 
-    def unicode(self):
+    def __unicode__(self):
         return self.simulation.name + ': ' + self.field
 
 
@@ -63,7 +67,16 @@ class Parameters( models.Model ):
     tm0 = models.TextField(null=True, blank=True)
     tmnucl = models.TextField(null=True, blank=True)
     trelax = models.TextField(null=True, blank=True)
-    simulation = models.OneToOneField( Simulation, on_delete=models.CASCADE )
+    simulation = models.OneToOneField( Simulation, on_delete=models.CASCADE, 
+                            primary_key = True )
+
+    def get_fields(self):
+        ignore = ['simulation']
+        fields = [(field.name, field.value_to_string(self)) for field in Parameters._meta.fields if field.name not in ignore and field.value_to_string(self)]
+        return fields
+
+    def __unicode__(self):
+        return self.simulation.name + " parameters"
 
 class Rupture_Parameters( models.Model ):
     simulation = models.OneToOneField( Simulation, on_delete=models.CASCADE )

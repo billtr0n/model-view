@@ -4,10 +4,11 @@ import os, logging
 # django includes
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.core.exceptions import ObjectDoesNotExist
 
 # my includes
-from .models import Simulation
-from .tasks import process_and_upload_simulations_task, test
+from .models import Simulation, Parameters
+from .tasks import process_and_upload_simulations_task
 
 """ upload method will accept a list of folders that need to be operated on. these should be transfered to the server already. 
     after they are done uploading they will redirect to models. new models will be visible from models page. """
@@ -18,7 +19,6 @@ def upload(request):
             clean_post = _cleanse_post( post )
             if clean_post:
                 for file in clean_post:
-                    print file
                     process_and_upload_simulations_task.delay( file )
                 response = { 'status' : 'success' }
             else:
@@ -28,7 +28,11 @@ def upload(request):
 
 def detail(request, simulation_id):
     simulation = get_object_or_404(Simulation, pk=simulation_id)
-    context = {'simulation': simulation}
+    try:
+        parameters = Parameters.objects.get(simulation=simulation)
+        context = {'par': parameters, 'sim': simulation}
+    except:
+        context = {'sim': simulation}
     return render(request, 'visualize/detail.html', context)
 
 def params(request, simulation_id):
@@ -36,7 +40,7 @@ def params(request, simulation_id):
 
 def index(request):
     simulation_list = Simulation.objects.order_by('upload_date')
-    context = {'simulation_list': simulation_list}
+    context = {'simulation_list': simulation_list }
     return render( request, 'visualize/index.html', context )
 
 

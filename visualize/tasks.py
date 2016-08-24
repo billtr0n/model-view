@@ -1,7 +1,6 @@
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
-
 @shared_task(name='test_task')
 def test(param):
     return 'tasked executed with params %s' % param
@@ -37,7 +36,8 @@ def process_and_upload_simulations_task( file ):
 
     from util import compute_rupture_velocity, plot_2d_image 
 
-    from .forms import *
+    from .forms import SimulationForm, ParametersForm
+    from .models import Simulation, Parameters
 
     """ Model setup, this will return false in ready method of class when written """
     # parse simulation details into dict
@@ -127,8 +127,8 @@ def process_and_upload_simulations_task( file ):
         # store information about the rupture on the fault
         simulation['rupture'] = {
             'fault_extent' : _get_fault_extent( data['psv'], nx, nz, dx ),
-            'magnitude' : _read_magnitude( cwd ),
-            'del_tau' : data['dtau'].mean()
+            'magnitude'    : _read_magnitude( cwd ),
+            'del_tau'      : data['dtau'].mean()
         }
     except Exception as e:
         logger.error("could not load data-files.")
@@ -185,25 +185,28 @@ def process_and_upload_simulations_task( file ):
     # write old data
     data = pd.DataFrame( data = temp )
     
-    rcrit = 4000
+    rcrit = 2500 
+    print 1
     """ kind of complex?, but it crops the source region and some other obvious things.  """
     data_trimmed =  pd.concat(
                     [ data[
                      ( ( (data['x'] > ihypo[0]-rcrit) & (data['x'] < ihypo[0]+rcrit) )   & 
                        ( (data['z'] < ihypo[1]-rcrit) | (data['z'] > ihypo[1]+rcrit) ) ) &
-                    ( (data['z'] > 4000) & (data['z'] < 15000) ) &
+                    ( (data['z'] > 0) & (data['z'] < 15000) ) &
                     ( (data['vrup'] < 1.0) & (data['vrup'] > 0.0) ) &
                     ( data['psv'] > 0.4 ) ],
 
                     data[((data['x'] < ihypo[0]-rcrit) | (data['x'] > ihypo[0]+rcrit)) &
-                    ( (data['z'] > 4000) & (data['z'] < 15000) ) &
+                    ( (data['z'] > 0) & (data['z'] < 15000) ) &
                     ( data['psv'] > 0.4 ) &
                     ( (data['vrup'] < 1.0) & data['vrup'] > 0.0 )] ]).drop_duplicates()
 
 
     # take small sample of the data
+    print 2
+    print len(data_trimmed)
     data_sample = data_trimmed.sample( n=10000 )
-
+    print 3
     # store one-point statistics
     simulation['one_point'] = {
 
@@ -235,6 +238,7 @@ def process_and_upload_simulations_task( file ):
         'med_del_tau': data_sample['dtau'].median()
 
     }
+    print 4
 
     # calculate two-point statistics
     """ stored in directory vario """
@@ -259,18 +263,18 @@ def process_and_upload_simulations_task( file ):
 
 
     """ write out csv files """
-    # print 'writing csv files'
-    logger.info('writing csv files')
-    data_trimmed.to_csv( os.path.join(datadir, 'data_trimmed.csv') )
-    data_sample.to_csv( os.path.join(datadir, 'data_sampled.csv') )
-    one_point = pd.Series( simulation['one_point'] ).to_csv( os.path.join(datadir, 'one_point.csv') )
+    # # print 'writing csv files'
+    # logger.info('writing csv files')
+    # data_trimmed.to_csv( os.path.join(datadir, 'data_trimmed.csv') )
+    # data_sample.to_csv( os.path.join(datadir, 'data_sampled.csv') )
+    # one_point = pd.Series( simulation['one_point'] ).to_csv( os.path.join(datadir, 'one_point.csv') )
 
-    logger.info('attempting to commit model to database')
-    sim = Simulation.objects.get(name=simulation['simulation']['name'])
+    logger.info('saving to database')
+    sim = _get_or_none( Simulation, simulation['parameters']['name'] )
     
     # check if simulation with same name exists already
     if sim:
-        logger.warning('simulation with name %s exists, updating entry.' % simulation['simulation']['name'])
+        logger.info('simulation with name %s exists, updating entry.' % simulation['simulation']['name'])
         simulation_form = SimulationForm( simulation['simulation'], instance = sim )
     else:
         logger.info('making new database entry for simulation %s' % simulation['simulation']['name'])
@@ -285,6 +289,7 @@ def process_and_upload_simulations_task( file ):
         return
     
     # create new forms for various tables given instance new_simulation 
+<<<<<<< HEAD
     # forms = [ SimulationOutputForm, SimulationInputForm, ParametersForm, RuptureParametersForm ]
     # data = [ simulation['fieldio']['outputs'], simulation['fieldio']['inputs'], simulation['parameters'], simulation['rupture'] ]
     forms = [ ParametersForm ]
@@ -295,21 +300,40 @@ def process_and_upload_simulations_task( file ):
     for f, d in zip(forms, data):
         _commit_form_with_fk( f, d, new_simulation )
     
+=======
+    forms = [ ParametersForm, ]
+
+    # get text representation of variables to store as text in db
+    data = [{key: val.__repr__() for (key, val) in simulation['parameters'].items()}, ]
+>>>>>>> 92a05d56c8f3f7a5ded7183cedec9185cc94ba19
 
     
+    # commit the parameters form
+    for f, d in zip(forms, data):
+        _commit_form_with_fk( f, d, new_simulation ) 
+
+def _get_or_none( model_class, name, **kwargs ):
+    from django.core.exceptions import ObjectDoesNotExist
+    try:
+        query = model_class.objects.get( name = name, **kwargs )
+    except ObjectDoesNotExist:
+        query = None
+    return query
+
+
 
 def _commit_form_with_fk( form, data, instance ):
     # we can just commit a dict
     import logging as logger
     if isinstance(data, dict):
-        f = form( data, instance = instance )
+        f = form( data )
         if f.is_valid():
             m = f.save( commit = False )
             m.simulation = instance
             m.save()
-            logger.info('saved to database')
+            logger.info('saved %s to database' % str(form))
         else:
-            logger.warning('unable to save form ')
+            print f.errors
     # must loop over dicts
     else:
         for d in data:
@@ -320,8 +344,7 @@ def _commit_form_with_fk( form, data, instance ):
                 m.save()
                 logger.info('saved to database')
             else:
-                logger.warning('unable to save form')
-    return
+                print f.errors
 
 def _get_figure( ax ):
     return ax[0,0].get_figure()
@@ -353,11 +376,12 @@ def _parse_simulation_details( cwd, write = False ):
         exec( open( os.path.join(cwd, 'meta.py')).read() )
         # get list of local variables aka namespace of meta.py
         lvars = locals()
-        exclude = ['json', 'lvars', 'shape', 'xi', 'indices']
+        exclude = ['json', 'lvars', 'shape', 'xi', 'indices', 'os', 'logging', 'data']
         for var, val in lvars.items():
             # exclude builtin types and json import
             if not var.startswith('__') and var not in exclude:
                 if var == 'fieldio':
+                    #print 'parsing fieldio'
                     inputs, outputs = _parse_fieldio(val, eval('shape'), eval('indices'))
                     data['fieldio']['inputs'] = inputs
                     data['fieldio']['outputs'] = outputs
@@ -378,6 +402,7 @@ def _parse_simulation_details( cwd, write = False ):
     # to be consistent with models
     data['simulation']['name'] = data['parameters']['name']
     data['simulation']['user'] = data['parameters']['user']
+
     return data
 
 """turns meta.py file into json object using eval, this is very risky, but I trust myself"""
@@ -396,7 +421,7 @@ def _parse_fieldio(fieldio, shape, indices):
                 } )
 
         # inputs
-        if field[0] == '=R':
+        if field[0] == '=R' or field[0] == "=r":
             if field_vals[0] == '-':
                 inputs.append( { 
                     'file': '',
