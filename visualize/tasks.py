@@ -1,8 +1,9 @@
 from celery import shared_task
 from celery.utils.log import get_task_logger
+
+
 @shared_task(name='test_task')
 def test(param):
-    print 'hi'
     return 'tasked executed with params %s' % param
 
 
@@ -273,7 +274,7 @@ def process_and_upload_simulations_task( file ):
         simulation_form = SimulationForm( simulation['simulation'], instance = sim )
     else:
         logger.info('making new database entry for simulation %s' % simulation['simulation']['name'])
-        simulation_form = SimulationForm( simulation['simulation'])
+        simulation_form = SimulationForm( simulation['simulation'] )
 
     # validate simulation form
     if simulation_form.is_valid():
@@ -286,8 +287,8 @@ def process_and_upload_simulations_task( file ):
     # create new forms for various tables given instance new_simulation 
     # forms = [ SimulationOutputForm, SimulationInputForm, ParametersForm, RuptureParametersForm ]
     # data = [ simulation['fieldio']['outputs'], simulation['fieldio']['inputs'], simulation['parameters'], simulation['rupture'] ]
-    forms = [ParametersForm]
-    data = [simulation['parameters']]
+    forms = [ ParametersForm ]
+    data = [ simulation['parameters'] ]
     for k,v in simulation['parameters'].items():
         print k, v
     # form should be dict or list of dicts
