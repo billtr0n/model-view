@@ -289,7 +289,6 @@ def process_and_upload_simulations_task( file ):
         return
     
     # create new forms for various tables given instance new_simulation 
-<<<<<<< HEAD
     # forms = [ SimulationOutputForm, SimulationInputForm, ParametersForm, RuptureParametersForm ]
     # data = [ simulation['fieldio']['outputs'], simulation['fieldio']['inputs'], simulation['parameters'], simulation['rupture'] ]
     forms = [ ParametersForm ]
@@ -300,12 +299,8 @@ def process_and_upload_simulations_task( file ):
     for f, d in zip(forms, data):
         _commit_form_with_fk( f, d, new_simulation )
     
-=======
     forms = [ ParametersForm, ]
-
-    # get text representation of variables to store as text in db
-    data = [{key: val.__repr__() for (key, val) in simulation['parameters'].items()}, ]
->>>>>>> 92a05d56c8f3f7a5ded7183cedec9185cc94ba19
+    data = [{key: val.__repr__() for (key, val) in simulation['parameters'].items()}, ] # get text representation
 
     
     # commit the parameters form
