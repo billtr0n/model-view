@@ -39,6 +39,14 @@ class RuptureParametersForm(ModelForm):
     def __unicode__(self):
         return 'rupture parameters model'
 
+class OnePointForm(ModelForm):
+    class Meta:
+        model = OnePoint
+        exclude = ['simulation']
+
+    def __unicode__(self):
+        return 'one point statistics'
+
 class UploadFileForm( forms.Form ):
     file = forms.FileField()
 

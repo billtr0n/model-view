@@ -79,7 +79,7 @@ class Parameters( models.Model ):
         return self.simulation.name + " parameters"
 
 class Rupture_Parameters( models.Model ):
-    simulation = models.OneToOneField( Simulation, on_delete=models.CASCADE )
+    simulation = models.OneToOneField( Simulation, on_delete=models.CASCADE, primary_key=True)
     fault_extent = models.FloatField()
     magnitude = models.FloatField()
     del_tau = models.FloatField()
@@ -89,3 +89,30 @@ class Rupture_Parameters( models.Model ):
         fields = [(field.name, field.value_to_string(self)) for field in Rupture_Parameters._meta.fields if field.name not in ignore and field.value_to_string(self)]
         return fields
 
+class OnePoint(models.Model):
+    simulation = models.OneToOneField( Simulation, on_delete=models.CASCADE, primary_key=True)
+    avg_slip_tr = models.FloatField()
+    avg_psv_tr = models.FloatField() 
+    avg_vrup_tr = models.FloatField()
+    std_slip_tr = models.FloatField()
+    std_psv_tr = models.FloatField() 
+    std_vrup_tr = models.FloatField()
+    avg_slip_sa = models.FloatField()
+    avg_psv_sa = models.FloatField() 
+    avg_vrup_sa = models.FloatField()
+    std_slip_sa = models.FloatField()
+    std_psv_sa = models.FloatField() 
+    std_vrup_sa = models.FloatField()
+    med_slip_sa = models.FloatField()
+    med_psv_sa = models.FloatField() 
+    med_vrup_sa = models.FloatField()
+    mad_slip_sa = models.FloatField()
+    mad_psv_sa = models.FloatField() 
+    mad_vrup_sa = models.FloatField()
+    med_del_tau = models.FloatField()
+    avg_del_tau = models.FloatField()
+
+    def get_fields(self):
+        ignore = ['simulation']
+        fields = [(field.name, field.value_to_string(self)) for field in OnePoint._meta.fields if field.name not in ignore and field.value_to_string(self)]
+        return fields
