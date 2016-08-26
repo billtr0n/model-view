@@ -121,10 +121,8 @@ def process_and_upload_simulations_task( file ):
         # calculate some things
         tsm_field = (item for item in simulation['fieldio']['outputs'] if item['field'] == "tsm").next()
         # data['vrup'] = compute_rupture_velocity( data['trup'], dx ) / vs[:-1].repeat(nx).reshape([nz,nx])
-        print '==============================='
-        print simulation['parameters']['rnucl']
         # 
-        data['vrup'] = compute_rupture_velocity( data['trup'], dx ) / 3464.
+        data['vrup'] = compute_rupture_velocity( data['trup'], dx ) 
         data['sum']  = np.sqrt( data['su1']**2 + data['su2']**2 )
         data['mu0']  = data['tsm'] / np.absolute(data['tnm'])
         data['dtau'] = _compute_stress_drop( files['tsm'], tsm_field['shape'], dtype )
@@ -332,7 +330,6 @@ def _commit_form_with_fk( form, data, instance ):
     if isinstance(data, dict):
         f = form( data )
         if f.is_valid():
-            print 'form is valid.'
             m = f.save( commit = False )
             m.simulation = instance
             m.save()

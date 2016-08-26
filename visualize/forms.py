@@ -6,7 +6,7 @@ from django import forms
 from django.forms import ModelForm
 
 # user defines imports
-from .models import Simulation, Simulation_Input, Simulation_Output, Parameters, Rupture_Parameters
+from .models import Simulation, Simulation_Input, Simulation_Output, Parameters, Rupture_Parameters, OnePoint
 
 class SimulationForm(ModelForm):
     class Meta:
