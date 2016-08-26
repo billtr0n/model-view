@@ -103,4 +103,4 @@ p10 <- ggplot(data = variograms$mu0, aes(x=dist, y=gamma)) + geom_point() +
 
 # write out variogram in some readable format, preferably csv 
 grd <- grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10, layout_matrix=lay, bottom="dist", left="gamma")
-ggsave( paste(cwd, "/figs/vario.pdf", sep=""), grd )
+ggsave( paste(cwd, "/figs/vario.png", sep=""), grd )

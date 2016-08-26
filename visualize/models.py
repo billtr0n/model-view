@@ -84,3 +84,8 @@ class Rupture_Parameters( models.Model ):
     magnitude = models.FloatField()
     del_tau = models.FloatField()
 
+    def get_fields(self):
+        ignore = ['simulation']
+        fields = [(field.name, field.value_to_string(self)) for field in Rupture_Parameters._meta.fields if field.name not in ignore and field.value_to_string(self)]
+        return fields
+

@@ -36,8 +36,8 @@ def process_and_upload_simulations_task( file ):
 
     from util import compute_rupture_velocity, plot_2d_image 
 
-    from .forms import SimulationForm, ParametersForm
-    from .models import Simulation, Parameters
+    from .forms import SimulationForm, ParametersForm, RuptureParametersForm, OnePointForm
+    from .models import Simulation
 
     """ Model setup, this will return false in ready method of class when written """
     # parse simulation details into dict
@@ -106,29 +106,34 @@ def process_and_upload_simulations_task( file ):
         xx, zz = np.meshgrid( x, z )
         material = np.loadtxt( os.path.join(cwd, 'bbp1d_1250_dx_25.asc') )
         vs = material[:,2]*1e3
+        dtype = simulation['parameters']['dtype']
         data = {
             'x'    : xx,
             'z'    : zz,
-            'su1'  : np.fromfile( files['su1'], dtype=np.float32 ).reshape([ nz, nx ]),
-            'su2'  : np.fromfile( files['su2'], dtype=np.float32 ).reshape([ nz, nx ]),
-            'trup' : np.fromfile( files['trup'], dtype=np.float32 ).reshape([ nz, nx ]),
-            'psv'  : np.fromfile( files['psv'], dtype=np.float32 ).reshape([ nz, nx ]),
-            'tsm'  : np.fromfile( files['tsm'], dtype=np.float32, count=nx*nz ).reshape([ nz, nx ]) / 1e6, # read initial shear stresses
-            'tnm'  : np.fromfile( files['tnm'], dtype=np.float32, count=nx*nz ).reshape([ nz, nx ]) / 1e6, # read initial normal stresses
+            'su1'  : np.fromfile( files['su1'], dtype=dtype ).reshape([ nz, nx ]),
+            'su2'  : np.fromfile( files['su2'], dtype=dtype ).reshape([ nz, nx ]),
+            'trup' : np.fromfile( files['trup'], dtype=dtype ).reshape([ nz, nx ]),
+            'psv'  : np.fromfile( files['psv'], dtype=dtype ).reshape([ nz, nx ]),
+            'tsm'  : np.fromfile( files['tsm'], dtype=dtype, count=nx*nz ).reshape([ nz, nx ]) / 1e6, # read initial shear stresses
+            'tnm'  : np.fromfile( files['tnm'], dtype=dtype, count=nx*nz ).reshape([ nz, nx ]) / 1e6, # read initial normal stresses
         }
         
         # calculate some things
         tsm_field = (item for item in simulation['fieldio']['outputs'] if item['field'] == "tsm").next()
-        data['vrup'] = compute_rupture_velocity( data['trup'], dx ) / vs[:-1].repeat(nx).reshape([nz,nx])
+        # data['vrup'] = compute_rupture_velocity( data['trup'], dx ) / vs[:-1].repeat(nx).reshape([nz,nx])
+        print '==============================='
+        print simulation['parameters']['rnucl']
+        # 
+        data['vrup'] = compute_rupture_velocity( data['trup'], dx ) / 3464.
         data['sum']  = np.sqrt( data['su1']**2 + data['su2']**2 )
         data['mu0']  = data['tsm'] / np.absolute(data['tnm'])
-        data['dtau'] = _compute_stress_drop( files['tsm'], tsm_field['shape'] )
+        data['dtau'] = _compute_stress_drop( files['tsm'], tsm_field['shape'], dtype )
 
         # store information about the rupture on the fault
         simulation['rupture'] = {
             'fault_extent' : _get_fault_extent( data['psv'], nx, nz, dx ),
-            'magnitude'    : _read_magnitude( cwd ),
-            'del_tau'      : data['dtau'].mean()
+            'magnitude'    : _read_magnitude( cwd, dtype ),
+            'del_tau'      : data['dtau'].mean() / 1e6
         }
     except Exception as e:
         logger.error("could not load data-files.")
@@ -186,7 +191,6 @@ def process_and_upload_simulations_task( file ):
     data = pd.DataFrame( data = temp )
     
     rcrit = 2500 
-    print 1
     """ kind of complex?, but it crops the source region and some other obvious things.  """
     data_trimmed =  pd.concat(
                     [ data[
@@ -203,10 +207,8 @@ def process_and_upload_simulations_task( file ):
 
 
     # take small sample of the data
-    print 2
-    print len(data_trimmed)
     data_sample = data_trimmed.sample( n=10000 )
-    print 3
+
     # store one-point statistics
     simulation['one_point'] = {
 
@@ -235,10 +237,10 @@ def process_and_upload_simulations_task( file ):
         'mad_vrup_sa': data_sample['vrup'].mad(),
 
         # save median of stress drop
-        'med_del_tau': data_sample['dtau'].median()
+        'med_del_tau': data_trimmed['dtau'].median() / 1e6,
+        'avg_del_tau': data_trimmed['dtau'].mean() / 1e6
 
     }
-    print 4
 
     # calculate two-point statistics
     """ stored in directory vario """
@@ -264,10 +266,10 @@ def process_and_upload_simulations_task( file ):
 
     """ write out csv files """
     # # print 'writing csv files'
-    # logger.info('writing csv files')
-    # data_trimmed.to_csv( os.path.join(datadir, 'data_trimmed.csv') )
-    # data_sample.to_csv( os.path.join(datadir, 'data_sampled.csv') )
-    # one_point = pd.Series( simulation['one_point'] ).to_csv( os.path.join(datadir, 'one_point.csv') )
+    logger.info('writing csv files')
+    data_trimmed.to_csv( os.path.join(datadir, 'data_trimmed.csv') )
+    data_sample.to_csv( os.path.join(datadir, 'data_sampled.csv') )
+    one_point = pd.Series( simulation['one_point'] ).to_csv( os.path.join(datadir, 'one_point.csv') )
 
     logger.info('saving to database')
     sim = _get_or_none( Simulation, simulation['parameters']['name'] )
@@ -291,22 +293,29 @@ def process_and_upload_simulations_task( file ):
     # create new forms for various tables given instance new_simulation 
     # forms = [ SimulationOutputForm, SimulationInputForm, ParametersForm, RuptureParametersForm ]
     # data = [ simulation['fieldio']['outputs'], simulation['fieldio']['inputs'], simulation['parameters'], simulation['rupture'] ]
-    forms = [ ParametersForm ]
-    data = [ simulation['parameters'] ]
-    for k,v in simulation['parameters'].items():
-        print k, v
-    # form should be dict or list of dicts
-    for f, d in zip(forms, data):
-        _commit_form_with_fk( f, d, new_simulation )
+    # forms = [ ParametersForm ]
+    # data = [ simulation['parameters'] ]
+    # # form should be dict or list of dicts
+    # for f, d in zip(forms, data):
+    #     _commit_form_with_fk( f, d, new_simulation )
     
-    forms = [ ParametersForm, ]
-    data = [{key: val.__repr__() for (key, val) in simulation['parameters'].items()}, ] # get text representation
+    # forms = [ ParametersForm, RuptureParametersForm ]
+    # data = [{key: val.__repr__() for (key, val) in simulation['parameters'].items()}, 
+    #         simulation['rupture'], ] 
+    forms = [ ParametersForm, RuptureParametersForm, OnePointForm ]
+    data = [ {key: val.__repr__() for (key, val) in simulation['parameters'].items()},
+             simulation['rupture'], 
+             simulation['one_point'] ] 
 
-    
-    # commit the parameters form
+    # commit the forms
     for f, d in zip(forms, data):
         _commit_form_with_fk( f, d, new_simulation ) 
 
+
+
+"""
+Functions
+"""
 def _get_or_none( model_class, name, **kwargs ):
     from django.core.exceptions import ObjectDoesNotExist
     try:
@@ -323,6 +332,7 @@ def _commit_form_with_fk( form, data, instance ):
     if isinstance(data, dict):
         f = form( data )
         if f.is_valid():
+            print 'form is valid.'
             m = f.save( commit = False )
             m.simulation = instance
             m.save()
@@ -344,16 +354,16 @@ def _commit_form_with_fk( form, data, instance ):
 def _get_figure( ax ):
     return ax[0,0].get_figure()
 
-def _compute_stress_drop( file , shape ): 
+def _compute_stress_drop( file , shape, dtype ): 
     from numpy import fromfile
     import os
     nx = shape[0]
     nz = shape[1]
     nt = shape[2]
-    ts = fromfile( file, 'f', count = nx*nz ).reshape( [nz, nx] )
+    ts = fromfile( file, dtype=dtype, count = nx*nz ).reshape( [nz, nx] )
     fh = open( file, 'rb' )
     fh.seek( -nx*nz*4, 2 )
-    tsf = fromfile( fh, 'f' ).reshape([nz,nx])
+    tsf = fromfile( fh, dtype=dtype ).reshape([nz,nx])
     delt = tsf - ts
     return delt
 
@@ -434,7 +444,7 @@ def _parse_fieldio(fieldio, shape, indices):
 
 
 
-def _read_magnitude( cwd ):
+def _read_magnitude( cwd, dtype ):
     import os
     from numpy import fromfile, where
 
@@ -442,14 +452,14 @@ def _read_magnitude( cwd ):
     for root, dirs, files in os.walk( cwd ):
         for name in files:
             if name == 'mw':
-                mw = fromfile(os.path.join(root, name),'f')[-1]
+                mw = fromfile(os.path.join(root, name),dtype=dtype)[-1]
                 return mw
     raise IOError
 
 def _get_fault_extent( field, nx, nz, dx ):
     """Needs work... Functional for now."""
     import os
-    from numpy import fromfile, where, floor
+    from numpy import where, floor
 
     y, x = where( field > 1.0 ) # returns inds where condition is true
     strtx = x.min()

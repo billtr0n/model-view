@@ -7,7 +7,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 
 # my includes
-from .models import Simulation, Parameters
+from .models import Simulation, Parameters, Rupture_Parameters,OnePoint
 from .tasks import process_and_upload_simulations_task
 
 """ upload method will accept a list of folders that need to be operated on. these should be transfered to the server already. 
@@ -27,12 +27,12 @@ def upload(request):
     return render(request, 'visualize/upload.html')
 
 def detail(request, simulation_id):
+    # get info
     simulation = get_object_or_404(Simulation, pk=simulation_id)
-    try:
-        parameters = Parameters.objects.get(simulation=simulation)
-        context = {'par': parameters, 'sim': simulation}
-    except:
-        context = {'sim': simulation}
+    parameters = _get_or_none(Parameters, simulation=simulation)
+    rupture = _get_or_none(Rupture_Parameters, simulation=simulation)
+    one_point = _get_or_none(OnePoint, simulation=simulation)
+    context = {'par': parameters, 'sim': simulation, 'rup': rupture, 'one_point': one_point}
     return render(request, 'visualize/detail.html', context)
 
 def params(request, simulation_id):
@@ -80,3 +80,10 @@ def _cleanse_post( post ):
     logging.info('exists: %s' % str(exists))
     return out
 
+def _get_or_none( model_class, **kwargs ):
+    from django.core.exceptions import ObjectDoesNotExist
+    try:
+        query = model_class.objects.get( **kwargs )
+    except ObjectDoesNotExist:
+        query = None
+    return query
