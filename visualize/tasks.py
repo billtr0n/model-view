@@ -187,8 +187,9 @@ def process_and_upload_simulations_task( file ):
 
     # write old data
     data = pd.DataFrame( data = temp )
-    
-    rcrit = 2500 
+    print len(data['x']) 
+    rcrit = np.max([simulation['parameters']['rnucl'], simulation['parameters']['rcrit']])
+    print rcrit 
     """ kind of complex?, but it crops the source region and some other obvious things.  """
     data_trimmed =  pd.concat(
                     [ data[
@@ -204,8 +205,11 @@ def process_and_upload_simulations_task( file ):
                     ( (data['vrup'] < 1.0) & data['vrup'] > 0.0 )] ]).drop_duplicates()
 
 
-    # take small sample of the data
-    data_sample = data_trimmed.sample( n=10000 )
+    if len(data_trimmed) < 10000:
+        logger.warning("less that 10,000 datapoints, not sampling.")
+        data_sample = data_trimmed
+    else:
+        data_sample = data_trimmed.sample( n=10000 )
 
     # store one-point statistics
     simulation['one_point'] = {
