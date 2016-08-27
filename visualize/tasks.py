@@ -104,8 +104,7 @@ def process_and_upload_simulations_task( file ):
         x = np.arange( 0, ex, dx )
         z = np.arange( 0, ez, dx )
         xx, zz = np.meshgrid( x, z )
-        material = np.loadtxt( os.path.join(cwd, 'bbp1d_1250_dx_25.asc') )
-        vs = material[:,2]*1e3
+        material = np.loadtxt( os.path.join(cwd, 'bbp1d_1250_dx_25.asc') )*1e3
         dtype = simulation['parameters']['dtype']
         data = {
             'x'    : xx,
@@ -120,9 +119,15 @@ def process_and_upload_simulations_task( file ):
         
         # calculate some things
         tsm_field = (item for item in simulation['fieldio']['outputs'] if item['field'] == "tsm").next()
-        # data['vrup'] = compute_rupture_velocity( data['trup'], dx ) / vs[:-1].repeat(nx).reshape([nz,nx])
-        # 
-        data['vrup'] = compute_rupture_velocity( data['trup'], dx ) 
+        vs_field = (item for item in simulation['fieldio']['inputs'] if item['field'] == "vs").next()
+        # at some point i want to be able to 
+        if vs_field['val'] != "":
+            print float(vs_field['val'])
+            vs = float(vs_field['val'])
+        else:
+            vs = material[:-1,2].repeat(nx).reshape([nz,nx]) 
+
+        data['vrup'] = compute_rupture_velocity( data['trup'], dx ) / 3464.
         data['sum']  = np.sqrt( data['su1']**2 + data['su2']**2 )
         data['mu0']  = data['tsm'] / np.absolute(data['tnm'])
         data['dtau'] = _compute_stress_drop( files['tsm'], tsm_field['shape'], dtype )
@@ -134,7 +139,7 @@ def process_and_upload_simulations_task( file ):
             'del_tau'      : data['dtau'].mean() / 1e6
         }
     except Exception as e:
-        logger.error("could not load data-files.")
+        logger.error(e)
         # set state to failed
         return
 
@@ -201,7 +206,7 @@ def process_and_upload_simulations_task( file ):
 
                     data[((data['x'] < ihypo[0]-rcrit) | (data['x'] > ihypo[0]+rcrit)) &
                     ( (data['z'] > 0) & (data['z'] < 15000) ) &
-                    ( data['psv'] > 0.4 ) &
+                    ( data['psv'] > 0.4 )  &
                     ( (data['vrup'] < 1.0) & data['vrup'] > 0.0 )] ]).drop_duplicates()
 
 
@@ -428,18 +433,20 @@ def _parse_fieldio(fieldio, shape, indices):
 
         # inputs
         if field[0] == '=R' or field[0] == "=r":
-            if field_vals[0] == '-':
-                inputs.append( { 
-                    'file': '',
-                    'field': field_vals[2][0],
-                    'val': field_vals[1],
-                 } )
-            else:
-                outputs.append( {
-                    'file': field_vals[0],
-                    'field': field_vals[2][0],
-                    'val': ''
-                    } )
+            inputs.append( {
+                'file': field_vals[0],
+                'field': field_vals[2][0],
+                'val': ''
+
+             } )
+    
+        # also inputs
+        if field[0] == '=':
+            inputs.append( {
+                'file': '',
+                'field': field_vals[2][0],
+                'val': field_vals[1],
+                } )
         
     return inputs, outputs
 
