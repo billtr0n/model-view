@@ -47,6 +47,18 @@ class OnePointForm(ModelForm):
     def __unicode__(self):
         return 'one point statistics'
 
+
+class FigureForm(ModelForm):
+    class Meta:
+        model = Figure
+        exclude = ['simulation']
+
+    def __unicode__(self):
+        return "figure product"
+
+
+
+
 class UploadFileForm( forms.Form ):
     file = forms.FileField()
 

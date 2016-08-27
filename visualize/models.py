@@ -116,3 +116,13 @@ class OnePoint(models.Model):
         ignore = ['simulation']
         fields = [(field.name, field.value_to_string(self)) for field in OnePoint._meta.fields if field.name not in ignore and field.value_to_string(self)]
         return fields
+
+class Figure(models.Model):
+    simulation = models.ForeignKey( Simulation, on_delete=models.CASCADE )
+    name = models.TextField()
+    file_path = models.TextField()
+
+    def get_fields(self):
+        ignore = ['simulation']
+        fields = [(field.name, field.value_to_string(self)) for field in Figure._meta.fields if field.name not in ignore and field.value_to_string(self)]
+        return fields
