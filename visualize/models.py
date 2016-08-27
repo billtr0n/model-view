@@ -27,8 +27,16 @@ class Simulation( models.Model ):
 class Simulation_Input( models.Model ):
     simulation = models.ForeignKey(Simulation, on_delete=models.CASCADE)
     file = models.CharField(max_length=200, null=True, blank=True)
-    fieldname = models.CharField(max_length=200)
+    field = models.CharField(max_length=200)
     val = models.CharField(max_length=200, null=True, blank=True)
+
+    def get_fields(self):
+        ignore = ['simulation', 'id']
+        fields = [(field.name, field.value_to_string(self)) for field in Simulation_Input._meta.fields if field.name not in ignore and field.value_to_string(self)]
+        return fields
+
+    def __unicode__(self):
+        return self.simulation.name + ': ' + self.field
 
 class Simulation_Output( models.Model ):
     simulation = models.ForeignKey(Simulation, on_delete=models.CASCADE)
@@ -36,6 +44,11 @@ class Simulation_Output( models.Model ):
     field = models.CharField(max_length=200)
     shape = models.CharField(max_length=200)
     indices = models.CharField(max_length=200)
+
+    def get_fields(self):
+        ignore = ['simulation', 'id']
+        fields = [(field.name, field.value_to_string(self)) for field in Simulation_Output._meta.fields if field.name not in ignore and field.value_to_string(self)]
+        return fields
 
     def __unicode__(self):
         return self.simulation.name + ': ' + self.field
@@ -120,9 +133,8 @@ class OnePoint(models.Model):
 class Figure(models.Model):
     simulation = models.ForeignKey( Simulation, on_delete=models.CASCADE )
     name = models.TextField()
+    # make an admin site for this
+    title = models.TextField(null=True, blank=True)
     file_path = models.TextField()
 
-    def get_fields(self):
-        ignore = ['simulation']
-        fields = [(field.name, field.value_to_string(self)) for field in Figure._meta.fields if field.name not in ignore and field.value_to_string(self)]
-        return fields
+

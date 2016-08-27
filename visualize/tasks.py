@@ -36,7 +36,7 @@ def process_and_upload_simulations_task( file ):
 
     from util import compute_rupture_velocity, plot_2d_image 
 
-    from .forms import SimulationForm, ParametersForm, RuptureParametersForm, OnePointForm
+    from .forms import SimulationForm, ParametersForm, RuptureParametersForm, OnePointForm, FigureForm, SimulationInputForm, SimulationOutputForm
     from .models import Simulation
 
     """ Model setup, this will return false in ready method of class when written """
@@ -122,10 +122,11 @@ def process_and_upload_simulations_task( file ):
         vs_field = (item for item in simulation['fieldio']['inputs'] if item['field'] == "vs").next()
         # at some point i want to be able to 
         if vs_field['val'] != "":
-            print float(vs_field['val'])
             vs = float(vs_field['val'])
+            logger.info('using vs %f' % vs)
         else:
             vs = material[:-1,2].repeat(nx).reshape([nz,nx]) 
+            logger.info('using vs %f' % vs[0,0])
 
         data['vrup'] = compute_rupture_velocity( data['trup'], dx ) / 3464.
         data['sum']  = np.sqrt( data['su1']**2 + data['su2']**2 )
@@ -156,7 +157,36 @@ def process_and_upload_simulations_task( file ):
         'mu0' : r'$\mu_0$',
         'dtau' : r'$\Delta \tau$' # needs some work
     }
-    
+
+    # set up list of figures for database
+    figs = []
+    media_root = os.path.join( os.path.dirname(os.path.realpath(__file__)), 'media/visualize/models/' )
+    for key in clabel:
+        figs.append( {'name': key, 
+                      'file_path': os.path.join(media_root, 
+                            simulation['parameters']['name'] + "_" + key + '.png' )    
+                      } )
+
+    # manually add variogram figure because it comes from R
+    figs.append( {'name': 'vario',
+                  'file_path': os.path.join(media_root, 
+                        simulation['parameters']['name'] + '_vario.png' )
+                  } )
+
+    # manually add histogram
+    figs.append( {'name': 'hist',
+                  'file_path': os.path.join(media_root, 
+                        simulation['parameters']['name'] + '_hist.png' )
+                  } )
+
+    # manually add variogram figure because it comes from R
+    figs.append( {'name': 'hist_log',
+                  'file_path': os.path.join(media_root, 
+                        simulation['parameters']['name'] + '_hist_log.png' )
+                  } )
+
+
+    # plot figures i think we want them in both places for posterity
     for field in data:
         if field not in ['x','z']:
             if field in ['sum','su1','su2']:
@@ -173,6 +203,7 @@ def process_and_upload_simulations_task( file ):
                 plot_2d_image( data[field], filename=os.path.join(figdir, field + '.png'),
                         nx=nx, nz=nz, dx=dx*1e-3, clabel=clabel[field], xlabel='Distance (km)', ylabel='Depth (km)', 
                         surface_plot=False, contour=False )
+
 
     """ calculate one-point statistics 
     mask unwanted values 
@@ -191,10 +222,8 @@ def process_and_upload_simulations_task( file ):
             temp[key] = data[key].ravel()
 
     # write old data
-    data = pd.DataFrame( data = temp )
-    print len(data['x']) 
+    data = pd.DataFrame( data = temp ) 
     rcrit = np.max([simulation['parameters']['rnucl'], simulation['parameters']['rcrit']])
-    print rcrit 
     """ kind of complex?, but it crops the source region and some other obvious things.  """
     data_trimmed =  pd.concat(
                     [ data[
@@ -253,6 +282,12 @@ def process_and_upload_simulations_task( file ):
     """ stored in directory vario """
     subprocess.call(["Rscript", os.path.join(cwd, "analysis.R"), cwd])
 
+    # copy figures to media root
+    for fig in figs:
+        src = os.path.join( figdir, fig['name'] + '.png' )
+        shutil.copy( src, fig['file_path'] )
+
+
     # compute histograms 
     ax = data_sample.hist( 
             bins = np.sqrt(len(data_sample.index)), 
@@ -309,16 +344,17 @@ def process_and_upload_simulations_task( file ):
     # forms = [ ParametersForm, RuptureParametersForm ]
     # data = [{key: val.__repr__() for (key, val) in simulation['parameters'].items()}, 
     #         simulation['rupture'], ] 
-    forms = [ ParametersForm, RuptureParametersForm, OnePointForm ]
+    forms = [ ParametersForm, RuptureParametersForm, OnePointForm, FigureForm, SimulationInputForm, SimulationOutputForm ]
     data = [ {key: val.__repr__() for (key, val) in simulation['parameters'].items()},
              simulation['rupture'], 
-             simulation['one_point'] ] 
+             simulation['one_point'],
+             figs,
+             simulation['fieldio']['inputs'],
+             simulation['fieldio']['outputs'] ] 
 
     # commit the forms
     for f, d in zip(forms, data):
         _commit_form_with_fk( f, d, new_simulation ) 
-
-
 
 """
 Functions
@@ -332,7 +368,6 @@ def _get_or_none( model_class, name, **kwargs ):
     return query
 
 
-
 def _commit_form_with_fk( form, data, instance ):
     # we can just commit a dict
     import logging as logger
@@ -342,7 +377,7 @@ def _commit_form_with_fk( form, data, instance ):
             m = f.save( commit = False )
             m.simulation = instance
             m.save()
-            logger.info('saved %s to database' % str(form))
+            logger.info('saved %s to database' % str(m) )
         else:
             print f.errors
     # must loop over dicts
@@ -353,7 +388,7 @@ def _commit_form_with_fk( form, data, instance ):
                 m = f.save( commit = False )
                 m.simulation = instance
                 m.save()
-                logger.info('saved to database')
+                logger.info('saved %s to database' % str(m) )
             else:
                 print f.errors
 
@@ -464,6 +499,7 @@ def _read_magnitude( cwd, dtype ):
                 return mw
     raise IOError
 
+# try using this function with trup to get proper fault extent
 def _get_fault_extent( field, nx, nz, dx ):
     """Needs work... Functional for now."""
     import os

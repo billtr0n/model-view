@@ -7,7 +7,8 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 
 # my includes
-from .models import Simulation, Parameters, Rupture_Parameters,OnePoint
+from .models import Simulation, Parameters, Rupture_Parameters,OnePoint,Figure
+from .models import Simulation_Input, Simulation_Output
 from .tasks import process_and_upload_simulations_task
 
 """ upload method will accept a list of folders that need to be operated on. these should be transfered to the server already. 
@@ -32,11 +33,11 @@ def detail(request, simulation_id):
     parameters = _get_or_none(Parameters, simulation=simulation)
     rupture = _get_or_none(Rupture_Parameters, simulation=simulation)
     one_point = _get_or_none(OnePoint, simulation=simulation)
-    context = {'par': parameters, 'sim': simulation, 'rup': rupture, 'one_point': one_point}
+    inp = _get_many_or_none(Simulation_Input, simulation=simulation)
+    outp = _get_many_or_none(Simulation_Output, simulation=simulation)
+    figs = _get_many_or_none(Figure, simulation=simulation)
+    context = {'par': parameters, 'sim': simulation, 'rup': rupture, 'one_point': one_point, 'figs': figs, 'inp': inp, 'outp': outp}
     return render(request, 'visualize/detail.html', context)
-
-def params(request, simulation_id):
-    return HttpResponse("Viewing portal for data products.")
 
 def index(request):
     simulation_list = Simulation.objects.order_by('upload_date')
@@ -81,9 +82,17 @@ def _cleanse_post( post ):
     return out
 
 def _get_or_none( model_class, **kwargs ):
-    from django.core.exceptions import ObjectDoesNotExist
     try:
         query = model_class.objects.get( **kwargs )
-    except ObjectDoesNotExist:
+    # could check if object does not exist, but we want none if it doesn't work
+    except:
         query = None
     return query
+
+def _get_many_or_none( model_class, **kwargs ):
+    try:
+        query = model_class.objects.filter( **kwargs )
+    except:
+        query = None
+    return query
+

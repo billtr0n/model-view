@@ -123,6 +123,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'),]
 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'visualize/media')
+MEDIA_URL = '/visualize/media/'
+
 # CELERY STUFF
 BROKER_URL = 'redis://localhost:6379'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
