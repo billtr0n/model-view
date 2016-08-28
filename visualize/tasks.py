@@ -134,10 +134,12 @@ def process_and_upload_simulations_task( file ):
         data['dtau'] = _compute_stress_drop( files['tsm'], tsm_field['shape'], dtype )
 
         # store information about the rupture on the fault
+        rupture_inds = np.where( data['trup'] < 1e9 )
+        rup_time_tolerance = 25.0
         simulation['rupture'] = {
-            'fault_extent' : _get_fault_extent( data['psv'], nx, nz, dx ),
+            'fault_extent' : _get_fault_extent( data['trup'], rup_time_tolerance, nx, nz, dx ),
             'magnitude'    : _read_magnitude( cwd, dtype ),
-            'del_tau'      : data['dtau'].mean() / 1e6
+            'del_tau'      : data['dtau'][rupture_inds].mean() / 1e6  # misleading need to fix
         }
     except Exception as e:
         logger.error(e)
@@ -521,7 +523,6 @@ def _parse_fieldio(fieldio, shape, indices):
     return inputs, outputs
 
 
-
 def _read_magnitude( cwd, dtype ):
     import os
     from numpy import fromfile, where
@@ -535,19 +536,24 @@ def _read_magnitude( cwd, dtype ):
     raise IOError
 
 # try using this function with trup to get proper fault extent
-def _get_fault_extent( field, nx, nz, dx ):
+def _get_fault_extent( field, tol, nx, nz, dx ):
     """Needs work... Functional for now."""
     import os
-    from numpy import where, floor
+    from numpy import where, floor, median
 
-    y, x = where( field > 1.0 ) # returns inds where condition is true
-    strtx = x.min()
-    endx = x.max()
-    nflt = floor( (endx - strtx) / 2 )
-    if nflt < 0:
-        print 'negative fault length, something is wrong.'
-        raise ValueError
-    fault_len = nflt * dx 
-    return fault_len
+    # loop through field depth slices when avg < tol, trigger
+    trigger = False
+    for i in range(nx):
+        dslice = field[:,i]
+        avg = median(dslice)
+        if avg < tol and not trigger:
+            trigger = True
+            minx = i*dx
+        if trigger and avg >= tol:
+            trigger = False
+            maxx = i*dx
+
+    return maxx-minx
+        
 
 	
