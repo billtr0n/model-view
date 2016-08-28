@@ -35,7 +35,7 @@ def detail(request, simulation_id):
     one_point = _get_or_none(OnePoint, simulation=simulation)
     inp = _get_many_or_none(Simulation_Input, simulation=simulation)
     outp = _get_many_or_none(Simulation_Output, simulation=simulation)
-    figs = _get_many_or_none(Figure, simulation=simulation)
+    figs = _get_figures(simulation)
     context = {'par': parameters, 'sim': simulation, 'rup': rupture, 'one_point': one_point, 'figs': figs, 'inp': inp, 'outp': outp}
     return render(request, 'visualize/detail.html', context)
 
@@ -96,3 +96,9 @@ def _get_many_or_none( model_class, **kwargs ):
         query = None
     return query
 
+def _get_figures( fk ):
+    try:
+        query = Figure.objects.filter(simulation=fk).order_by('upload_date').values('file_path','name').distinct()
+    except:
+        query = None
+    return query

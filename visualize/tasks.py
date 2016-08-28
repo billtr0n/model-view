@@ -369,7 +369,6 @@ def _get_or_none( model_class, name, **kwargs ):
 
 
 def _commit_form_with_fk( form, data, instance ):
-    # we can just commit a dict
     import logging as logger
     if isinstance(data, dict):
         f = form( data )

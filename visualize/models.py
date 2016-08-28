@@ -8,8 +8,8 @@ class Simulation( models.Model ):
     # TODO: These values will come with post request, user and upload_date, think about validating data client side and sending json over
     user = models.CharField(max_length=200, blank=True)
     name = models.CharField(max_length=200, default='', null=True, blank=True, unique=True)
-    upload_date = models.DateTimeField('upload date', blank=True, null=True)
-    comments = models.TextField(default='', blank=True)
+    upload_date = models.DateTimeField(auto_now_add=True)
+    comments = models.TextField(null=True, blank=True)
     
     def get_fields(self):
         ignore = ['id']
@@ -30,6 +30,9 @@ class Simulation_Input( models.Model ):
     field = models.CharField(max_length=200)
     val = models.CharField(max_length=200, null=True, blank=True)
 
+    class Meta:
+        unique_together = ["simulation", "file", "field"]
+
     def get_fields(self):
         ignore = ['simulation', 'id']
         fields = [(field.name, field.value_to_string(self)) for field in Simulation_Input._meta.fields if field.name not in ignore and field.value_to_string(self)]
@@ -44,6 +47,9 @@ class Simulation_Output( models.Model ):
     field = models.CharField(max_length=200)
     shape = models.CharField(max_length=200)
     indices = models.CharField(max_length=200)
+
+    class Meta:
+        unique_together = ["simulation", "file"]
 
     def get_fields(self):
         ignore = ['simulation', 'id']
@@ -80,8 +86,7 @@ class Parameters( models.Model ):
     tm0 = models.TextField(null=True, blank=True)
     tmnucl = models.TextField(null=True, blank=True)
     trelax = models.TextField(null=True, blank=True)
-    simulation = models.OneToOneField( Simulation, on_delete=models.CASCADE, 
-                            primary_key = True )
+    simulation = models.OneToOneField( Simulation, on_delete=models.CASCADE, primary_key = True )
 
     def get_fields(self):
         ignore = ['simulation']
@@ -136,5 +141,10 @@ class Figure(models.Model):
     # make an admin site for this
     title = models.TextField(null=True, blank=True)
     file_path = models.TextField()
+    upload_date = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(null=True, blank=True)
+
+    def __unicode__(self):
+        return self.simulation.name + ":" + self.name + ' -- ' + str(self.upload_date)
 
 
