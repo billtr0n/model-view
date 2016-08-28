@@ -33,6 +33,7 @@ start django server <br>
 * query newest distinct figures
 * no bounding box around figure
 * add support for gmpe comparisons
+* and wave-propagation simulations
 
 #### Future
 * develop datastore to store raw data
