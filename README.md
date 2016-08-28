@@ -18,7 +18,7 @@ start celery worker (from pyorogeny directory) <br>
 <br>
 note: call celery from bin directory in project virtualenv<br>
 
-make database migrations (only run on initial install)<br>
+make database migrations (only run when necessary)<br>
 ``` python manage.py makemigrations ```<br>
 
 migrate database (only run when necessary)<br>
@@ -29,16 +29,14 @@ start django server <br>
 
 
 ### Todo
-* commit models to the database
-  * status: sim and parameters good,
-  * need to add simulation outputs and inputs
-  * add data-product model to store premade figures
+* try catch block for unique together models
+* query newest distinct figures
+* no bounding box around figure
+* add support for gmpe comparisons
+
+#### Future
 * develop datastore to store raw data
-* build homepage
-* build models overview page
-* build details page
-* restyle upload page
-* add nonexistent required directories
+* interactive plotting in client (angular?,d3)
 
 
 
