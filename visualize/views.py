@@ -65,6 +65,7 @@ def _cleanse_post( post ):
             elif f and os.path.isdir( f ):
                 out.append( f )
 
+    # be more specific
     except Exception as e:
         logging.info('unable to iterate on post, trying as single file.\nerror msg: %s' % str(e))
         # maybe it has one file
@@ -98,7 +99,7 @@ def _get_many_or_none( model_class, **kwargs ):
 
 def _get_figures( fk ):
     try:
-        query = Figure.objects.filter(simulation=fk).order_by('upload_date').values('file_path','name').distinct()
+        query = Figure.objects.filter(simulation=fk, active=True).values('file_path','name').order_by('name')
     except:
         query = None
     return query

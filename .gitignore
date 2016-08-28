@@ -5,3 +5,5 @@ README
 venv/
 todo
 *.pdf
+visualize/media/visualize/models/*
+dump.rdb

@@ -31,7 +31,7 @@ class Simulation_Input( models.Model ):
     val = models.CharField(max_length=200, null=True, blank=True)
 
     class Meta:
-        unique_together = ["simulation", "file", "field"]
+        unique_together = ["simulation", "field"]
 
     def get_fields(self):
         ignore = ['simulation', 'id']
@@ -142,7 +142,9 @@ class Figure(models.Model):
     title = models.TextField(null=True, blank=True)
     file_path = models.TextField()
     upload_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
     notes = models.TextField(null=True, blank=True)
+    active = models.BooleanField(default=True)
 
     def __unicode__(self):
         return self.simulation.name + ":" + self.name + ' -- ' + str(self.upload_date)

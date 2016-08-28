@@ -55,6 +55,14 @@ class FigureForm(ModelForm):
     def __unicode__(self):
         return "figure product"
 
+class ActivateFigureForm(ModelForm):
+    class Meta:
+        model = Figure
+        fields = ('active',)
+
+    def __unicode__(self):
+        return 'activate/deactive figure form'
+
 
 
 

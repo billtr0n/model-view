@@ -36,8 +36,8 @@ def process_and_upload_simulations_task( file ):
 
     from util import compute_rupture_velocity, plot_2d_image 
 
-    from .forms import SimulationForm, ParametersForm, RuptureParametersForm, OnePointForm, FigureForm, SimulationInputForm, SimulationOutputForm
-    from .models import Simulation
+    from .forms import SimulationForm, ParametersForm, RuptureParametersForm, OnePointForm, FigureForm, SimulationInputForm, SimulationOutputForm, ActivateFigureForm
+    from .models import Simulation, Figure
 
     """ Model setup, this will return false in ready method of class when written """
     # parse simulation details into dict
@@ -164,25 +164,29 @@ def process_and_upload_simulations_task( file ):
     for key in clabel:
         figs.append( {'name': key, 
                       'file_path': os.path.join(media_root, 
-                            simulation['parameters']['name'] + "_" + key + '.png' )    
+                            simulation['parameters']['name'] + "_" + key + '1.png' ),
+                      'active': True    
                       } )
 
     # manually add variogram figure because it comes from R
     figs.append( {'name': 'vario',
                   'file_path': os.path.join(media_root, 
-                        simulation['parameters']['name'] + '_vario.png' )
+                        simulation['parameters']['name'] + '_vario1.png' ),
+                  'active': True
                   } )
 
     # manually add histogram
     figs.append( {'name': 'hist',
                   'file_path': os.path.join(media_root, 
-                        simulation['parameters']['name'] + '_hist.png' )
+                        simulation['parameters']['name'] + '_hist1.png' ),
+                  'active': True
                   } )
 
     # manually add variogram figure because it comes from R
     figs.append( {'name': 'hist_log',
                   'file_path': os.path.join(media_root, 
-                        simulation['parameters']['name'] + '_hist_log.png' )
+                        simulation['parameters']['name'] + '_hist_log1.png' ),
+                  'active': True
                   } )
 
 
@@ -285,6 +289,12 @@ def process_and_upload_simulations_task( file ):
     # copy figures to media root
     for fig in figs:
         src = os.path.join( figdir, fig['name'] + '.png' )
+        # create incrementing filenames without state file
+        if os.path.isfile( fig['name'] ):
+            basename = os.path.splitext( fig['file_path'] )[0]
+            # assumes number is hardcoded before the '.' preceding the file ext and increments by one
+            number = int(basename[-1]) + 1
+            fig['file_path'] = basename[:-1] + str(number) + '.png'
         shutil.copy( src, fig['file_path'] )
 
 
@@ -352,6 +362,25 @@ def process_and_upload_simulations_task( file ):
              simulation['fieldio']['inputs'],
              simulation['fieldio']['outputs'] ] 
 
+
+    # allow multiple figures to be uploaded with same name to database
+    queried_figs = Figure.objects.filter(simulation=new_simulation)
+    if queried_figs:
+        for fig in queried_figs:
+            # dont set old not-updated figure to inactive
+            current_fig_names = [ f['name'] for f in figs ]
+            print current_fig_names
+            if fig.name in current_fig_names:
+                print 'name in current_fig_names'
+                d = { 'active': False }
+                form = ActivateFigureForm( d, instance = fig )
+                if form.is_valid():
+                    print 'form is valid.'
+                    m = form.save()
+                    logger.info('updating figure %s' % str(m))
+    else:
+        print 'no queried figs.'
+
     # commit the forms
     for f, d in zip(forms, data):
         _commit_form_with_fk( f, d, new_simulation ) 
@@ -370,13 +399,17 @@ def _get_or_none( model_class, name, **kwargs ):
 
 def _commit_form_with_fk( form, data, instance ):
     import logging as logger
+    from django.db import IntegrityError
     if isinstance(data, dict):
         f = form( data )
         if f.is_valid():
             m = f.save( commit = False )
             m.simulation = instance
-            m.save()
-            logger.info('saved %s to database' % str(m) )
+            try:
+                m.save()
+                logger.info('saved %s to database' % str(m) )
+            except IntegrityError as e:
+                logger.info( 'caught %s. model %s already exists in database. aborting save.' % (str(e), str(m)) )
         else:
             print f.errors
     # must loop over dicts
@@ -386,8 +419,11 @@ def _commit_form_with_fk( form, data, instance ):
             if f.is_valid():
                 m = f.save( commit = False )
                 m.simulation = instance
-                m.save()
-                logger.info('saved %s to database' % str(m) )
+                try:
+                    m.save()
+                    logger.info('saved %s to database' % str(m) )
+                except IntegrityError as e:
+                    logger.info( 'caught %s. model %s already exists in database. aborting save.' % (str(e), str(m)) )
             else:
                 print f.errors
 
