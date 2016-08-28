@@ -99,7 +99,7 @@ def _get_many_or_none( model_class, **kwargs ):
 
 def _get_figures( fk ):
     try:
-        query = Figure.objects.filter(simulation=fk, active=True).values('file_path','name').order_by('name')
+        query = Figure.objects.filter(simulation=fk, active=True).values('file_path','name')
     except:
         query = None
     return query

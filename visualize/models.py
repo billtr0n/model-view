@@ -146,6 +146,9 @@ class Figure(models.Model):
     notes = models.TextField(null=True, blank=True)
     active = models.BooleanField(default=True)
 
+    class Meta:
+        get_latest_by = "modified_date"
+
     def __unicode__(self):
         return self.simulation.name + ":" + self.name + ' -- ' + str(self.upload_date)
 
