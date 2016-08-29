@@ -128,7 +128,7 @@ def process_and_upload_simulations_task( file ):
             vs = material[:-1,2].repeat(nx).reshape([nz,nx]) 
             logger.info('using vs %f' % vs[0,0])
 
-        data['vrup'] = compute_rupture_velocity( data['trup'], dx ) / 3464.
+        data['vrup'] = compute_rupture_velocity( data['trup'], dx ) / vs
         data['sum']  = np.sqrt( data['su1']**2 + data['su2']**2 )
         data['mu0']  = data['tsm'] / np.absolute(data['tnm'])
         data['dtau'] = _compute_stress_drop( files['tsm'], tsm_field['shape'], dtype )
@@ -284,22 +284,6 @@ def process_and_upload_simulations_task( file ):
 
     }
 
-    # calculate two-point statistics
-    """ stored in directory vario """
-    subprocess.call(["Rscript", os.path.join(cwd, "analysis.R"), cwd])
-
-    # copy figures to media root
-    for fig in figs:
-        src = os.path.join( figdir, fig['name'] + '.png' )
-        # create incrementing filenames without state file
-        if os.path.isfile( fig['name'] ):
-            basename = os.path.splitext( fig['file_path'] )[0]
-            # assumes number is hardcoded before the '.' preceding the file ext and increments by one
-            number = int(basename[-1]) + 1
-            fig['file_path'] = basename[:-1] + str(number) + '.png'
-        shutil.copy( src, fig['file_path'] )
-
-
     # compute histograms 
     ax = data_sample.hist( 
             bins = np.sqrt(len(data_sample.index)), 
@@ -324,6 +308,22 @@ def process_and_upload_simulations_task( file ):
     data_trimmed.to_csv( os.path.join(datadir, 'data_trimmed.csv') )
     data_sample.to_csv( os.path.join(datadir, 'data_sampled.csv') )
     one_point = pd.Series( simulation['one_point'] ).to_csv( os.path.join(datadir, 'one_point.csv') )
+
+    # calculate two-point statistics
+    """ stored in directory vario """
+    subprocess.call(["Rscript", os.path.join(cwd, "analysis.R"), cwd])
+
+    # copy figures to media root
+    for fig in figs:
+        src = os.path.join( figdir, fig['name'] + '.png' )
+        # create incrementing filenames without state file
+        if os.path.isfile( fig['name'] ):
+            basename = os.path.splitext( fig['file_path'] )[0]
+            # assumes number is hardcoded before the '.' preceding the file ext and increments by one
+            number = int(basename[-1]) + 1
+            fig['file_path'] = basename[:-1] + str(number) + '.png'
+        shutil.copy( src, fig['file_path'] )
+
 
     logger.info('saving to database')
     sim = _get_or_none( Simulation, simulation['parameters']['name'] )

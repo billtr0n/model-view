@@ -100,8 +100,8 @@ Click <a href="{% url 'visualize:index' %}">here</a> to go back to the index.
 			<img src="{{ fig.file_path }}" style="width:100%">
 			</div>
 			{% endfor %}
-			<a class="w3-btn-floating" style="position:absolute;top:90%;left:45%" onclick="plusDivs(-1)">❮</a>
-			<a class="w3-btn-floating" style="position:absolute;top:90%;right:45%" onclick="plusDivs(1)">❯</a>
+			<a class="w3-btn-floating" style="position:absolute;top:99%;left:45%; color:white;" onclick="plusDivs(-1)">❮</a>
+			<a class="w3-btn-floating" style="position:absolute;top:99%;right:45%; color:white;" onclick="plusDivs(1)">❯</a>
 		{% else %}
 		<p>There are no figures to display for this model.</p>
 		{% endif %}
