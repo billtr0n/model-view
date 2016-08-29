@@ -3,107 +3,168 @@
 <head>
 {% load staticfiles %}
 <link rel="stylesheet" type="text/css" href="{% static 'visualize/detail.css' %}" />
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="{% static 'visualize/w3.css' %}" />
+<script src = "http://code.jquery.com/jquery-1.10.2.js"></script>
+<script src = "http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+<script type="text/javascript" src="{% static 'visualize/detail.js' %}"/></script>
+<script>
+$(function() {
+    $( "#tabs-1" ).tabs();
+});
+
+var slideIndex = 1;
+showDivs(slideIndex);
+
+function plusDivs(n) {
+  showDivs(slideIndex += n);
+}
+
+function showDivs(n) {
+    var i;
+    var x = document.getElementsByClassName("slideshow");
+    if (n > x.length) {
+        slideIndex = 1
+    }
+    if (n < 1) {
+        slideIndex = x.length
+    }
+    for (i = 0; i < x.length; i++) {
+        x[i].style.display = "none";
+    }
+    x[slideIndex-1].style.display = "block";
+}
+</script>
+<style>
+ #tabs-1{font-size: 14px;}
+ .ui-widget-header {
+ 	background: #FFFFFF;
+    color: #FFFFFF;
+    font-weight: bold;
+    border: none;
+ }
+</style>
+
 </head>
 <body>
 Click <a href="{% url 'visualize:index' %}">here</a> to go back to the index.
-<h2>Simulation {{sim.name}} </h2>
-<p>{{ sim.comments }}
-{% if par %}
-<h2>Simulation Parameters</h2>
-<table>
-<tr>
-	<th>Parameters</th>
-	<th>Value</th>
-</tr>
-{% for name, value in par.get_fields %}
-<tr>
-    <td>{{ name }}</td>
-    <td>{{ value }}</td>
-</tr>
-{% endfor %}
-</table>
-{% endif %}
+<div id="tabs-1">
+	<ul>
+		<li><a href = "#tab-overview">Overview</a></li>
+		<li><a href = "#tab-figures">Figures</a></li>
+		<li><a href = "#tab-parameters">Parameters</a></li>
+		<li><a href = "#tab-outputs">Output</a></li>
+	</ul>
+	<div id = "tab-overview">
+		<h2>Simulation {{sim.name}} </h2>
+		<p>{{ sim.comments }}</p>
+		{% if rup %}
+		<h2>Rupture Details</h2>
+		<table>
+		<tr>
+			<th>Parameter</th>
+			<th>Value</th>
+		</tr>
+		{% for name, value in rup.get_fields %}
+		<tr>
+			<td>{{ name }}</td>
+			<td>{{ value }}</td>
+		</tr>
+		{% endfor %}
+		</table>
+		{% endif %}
 
-{% if inp %}
-<h2>Simulation Inputs</h2>
-<table>
-<tr>
-	<th>Field</th>
-	<th>Val</th>
-</tr>
-{% for i in inp %}
-<tr>
-	<td>{{ i.field }}</td>
-	{% if i.val %}
-		<td>{{ i.val }}</td>
-	{% elif i.file %}
-		<td>{{i.file }}</td>
-	{% endif %}
-</tr>
-{% endfor %}
-</table>
-{% endif %}
+		{% if one_point %}
+		<h2>One Point Statistics</h2>
+		<table>
+		<tr>
+			<th>Parameter</th>
+			<th>Value</th>
+		</tr>
+		{% for name, value in one_point.get_fields %}
+		<tr>
+			<td>{{ name }}</td>
+			<td>{{ value }}</td>
+		</tr>
+		{% endfor %}
+		</table>
+		{% endif %}
+	</div>
 
-{% if rup %}
-<h2>Rupture Details</h2>
-<table>
-<tr>
-	<th>Parameter</th>
-	<th>Value</th>
-</tr>
-{% for name, value in rup.get_fields %}
-<tr>
-	<td>{{ name }}</td>
-	<td>{{ value }}</td>
-</tr>
-{% endfor %}
-</table>
-{% endif %}
+	<div id = "tab-figures">
+		<h2>Figures</h2>
+		{% if figs %}
+			{% for fig in figs %}
+			<div class="slideshow">
+			<h3>{{ fig.name }}</h3>
+			<img src="{{ fig.file_path }}" style="width:100%">
+			</div>
+			{% endfor %}
+			<a class="w3-btn-floating" style="position:absolute;top:90%;left:45%" onclick="plusDivs(-1)">❮</a>
+			<a class="w3-btn-floating" style="position:absolute;top:90%;right:45%" onclick="plusDivs(1)">❯</a>
+		{% else %}
+		<p>There are no figures to display for this model.</p>
+		{% endif %}
+	</div>
 
-{% if one_point %}
-<h2>One Point Statistics</h2>
-<table>
-<tr>
-	<th>Parameter</th>
-	<th>Value</th>
-</tr>
-{% for name, value in one_point.get_fields %}
-<tr>
-	<td>{{ name }}</td>
-	<td>{{ value }}</td>
-</tr>
-{% endfor %}
-</table>
-{% endif %}
+	<div id="tab-parameters">
+		{% if par %}
+		<h2>Simulation Parameters</h2>
+		<table>
+		<tr>
+			<th>Parameters</th>
+			<th>Value</th>
+		</tr>
+		{% for name, value in par.get_fields %}
+		<tr>
+		    <td>{{ name }}</td>
+		    <td>{{ value }}</td>
+		</tr>
+		{% endfor %}
+		</table>
+		{% endif %}
+		{% if inp %}
+		<h2>Simulation Inputs</h2>
+		<table>
+		<tr>
+			<th>Field</th>
+			<th>Val</th>
+		</tr>
+		{% for i in inp %}
+		<tr>
+			<td>{{ i.field }}</td>
+			{% if i.val %}
+				<td>{{ i.val }}</td>
+			{% elif i.file %}
+				<td>{{i.file }}</td>
+			{% endif %}
+		</tr>
+		{% endfor %}
+		</table>
+		{% endif %}
+	</div>
 
-{% if figs %}
-<h2>Figures</h2>
-{% for fig in figs %}
-<figure>
-	<figcaption style="font-size: 24px;"><b>{{ fig.name }}</b></figcaption>
-	<img src="{{ fig.file_path }}" alt='{{ fig.file_path }}'>
-</figure>
-{% endfor %}
-{% endif %}
-
-{% if outp %}
-<h2>Simulation Outputs</h2>
-<table>
-<tr>
-	<th>File</th>
-	<th>Field</th>
-	<th>Shape</th>
-	<th>Indices</th>
-</tr>
-{% for out in outp %}
-<tr>
-	<td>{{ out.file }}</td>
-	<td>{{ out.field }}</td>
-	<td>{{ out.shape }}</td>
-	<td>{{ out.indices }}</td>
-</tr>
-{% endfor %}
-</table>
-{% endif %}
+	<div id="tab-outputs">
+		{% if outp %}
+		<h2>Simulation Outputs</h2>
+		<table>
+		<tr>
+			<th>File</th>
+			<th>Field</th>
+			<th>Shape</th>
+			<th>Indices</th>
+		</tr>
+		{% for out in outp %}
+		<tr>
+			<td>{{ out.file }}</td>
+			<td>{{ out.field }}</td>
+			<td>{{ out.shape }}</td>
+			<td>{{ out.indices }}</td>
+		</tr>
+		{% endfor %}
+		</table>
+		{% endif %}
+		</div>
+</div>
 </body>
 </html>

@@ -536,6 +536,7 @@ def _read_magnitude( cwd, dtype ):
     raise IOError
 
 # try using this function with trup to get proper fault extent
+# possible use the boundary region of the fault 
 def _get_fault_extent( field, tol, nx, nz, dx ):
     """Needs work... Functional for now."""
     import os
