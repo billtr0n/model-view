@@ -28,3 +28,12 @@ tr:nth-child(even) {
     text-overflow: ellipsis;
 }
 
+.might-overflow {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.popover {
+	max-width:none;
+}
