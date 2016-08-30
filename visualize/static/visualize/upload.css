@@ -1,25 +1,30 @@
-textarea[name=comments] {
-    width: 500px
-    height: 100px
-    margin: 2px
+.fileUpload {
+    position: relative;
+    overflow: hidden;
+    margin: 1px;
+    width: 150px;
+    display: table;
+    vertical-align: middle;
+    clear:both;
+    background: #f5f5f5;
+    border-color: darkgrey;
+    color: black;
 }
 
-textarea[name=tags] {
-    width: 500px
-    height: 35px
-    margin: 2px
+.fileUpload input.upload {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0;
+    filter: alpha(opacity=0);
+    border: 1px solid #e3e3e3;
 }
 
-table {
-    border-collapse: collapse;
-    width: 35%
-}
-
-table, th, td {
-    border: 1px solid black;
-    padding: 3px;
-}
-
-tr:nth-child(even) {
-    background-color: #f2f2f2
+.well h3 {
+    height: 5%;
+    margin: 5px;
 }

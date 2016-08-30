@@ -1,14 +1,26 @@
-{% extends "visualize/base.html" %}
+{% extends "visualize/base_fluid.html" %}
 {% block header %}
 {% load staticfiles %}
 	<link rel="stylesheet" type="text/css" href="{% static 'visualize/upload.css' %}" />
 {% endblock %}
 {% block content %}
+<div class="well">
+	<p>
+		<h3>Upload SORD Simulation</h3>
+		Upload text file containing full file-path of simulation directory on the server.  Make sure correct data files reside in a directory labed 'out' and magnitude file is located in a directory called 'stats'.
+	</p>
+</div>
 <div id='form'>
 	<form method="post">
 		{% csrf_token %}
-	    <input id="file" type="file" name="file"><br>
-	    <input type="button" id='submit' value="Upload File"><br>
+		<div class="fileUpload btn btn-primary">
+			<span>Choose Files</span>
+		    <input class='upload' id="file" type="file" name="file"><br>
+		</div>
+		<div class="fileUpload btn btn-primary">
+			<span>Upload</span>
+		    <input class='upload' type="button" id='submit' value="Upload File"><br>
+		</div>
 	</form>
 </div>
 <div id='message'>

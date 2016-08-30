@@ -22,3 +22,9 @@ tr:nth-child(even) {
     background-image: none
 }
 
+.col-md-4 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+

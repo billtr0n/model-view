@@ -56,7 +56,8 @@ var displayUpload = function(e) {
         fr.onload = function(e) {
             try {
                 // console.log( e.target.result );
-                $("#message").html(document.createTextNode(e.target.result))                
+                $("#message").html("<h4>Selected Files</h4>")
+                $("#message").append(document.createTextNode(e.target.result))                
                 if (typeof e.target.result === 'string') {
                     obj['files'] = e.target.result;
                 }
