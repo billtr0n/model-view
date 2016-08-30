@@ -29,15 +29,16 @@ start django server <br>
 
 
 ### Todo
-* try catch block for unique together models
-* query newest distinct figures
-* no bounding box around figure
+* add editable div to input figure captions and simulation comments
+* implement visualization of model overview
+* clean up model detail page and simulation list
+* implement tagging system for database
 * add support for gmpe comparisons
 * and wave-propagation simulations
 
 #### Future
 * develop datastore to store raw data
-* interactive plotting in client (angular?,d3)
+*
 
 
 

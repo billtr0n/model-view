@@ -28,7 +28,9 @@ def upload(request):
     return render(request, 'visualize/upload.html')
 
 def detail(request, simulation_id):
-    # get info
+    # probably a better way to grab shit from the database
+    # maybe wrap into single massive query
+    simulation_list = Simulation.objects.order_by('upload_date')
     simulation = get_object_or_404(Simulation, pk=simulation_id)
     parameters = _get_or_none(Parameters, simulation=simulation)
     rupture = _get_or_none(Rupture_Parameters, simulation=simulation)
@@ -36,7 +38,16 @@ def detail(request, simulation_id):
     inp = _get_many_or_none(Simulation_Input, simulation=simulation)
     outp = _get_many_or_none(Simulation_Output, simulation=simulation)
     figs = _get_figures(simulation)
-    context = {'par': parameters, 'sim': simulation, 'rup': rupture, 'one_point': one_point, 'figs': figs, 'inp': inp, 'outp': outp}
+    context = {
+               'list': simulation_list, 
+               'par': parameters, 
+               'sim': simulation,
+               'rup': rupture, 
+               'one_point': one_point, 
+               'figs': figs, 
+               'inp': inp, 
+               'outp': outp
+              }
     return render(request, 'visualize/detail.html', context)
 
 def index(request):
