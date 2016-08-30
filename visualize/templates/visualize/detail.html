@@ -1,61 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends "visualize/base.html" %}
 {% load staticfiles %}
-<link rel="stylesheet" type="text/css" href="{% static 'visualize/detail.css' %}" />
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css">
-<link rel="stylesheet" type="text/css" href="{% static 'visualize/w3.css' %}" />
-<script src = "http://code.jquery.com/jquery-1.10.2.js"></script>
-<script src = "http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
-<script type="text/javascript" src="{% static 'visualize/detail.js' %}"/></script>
-<script>
-$(function() {
-    $( "#tabs-1" ).tabs();
-});
-
-var slideIndex = 1;
-showDivs(slideIndex);
-
-function plusDivs(n) {
-  showDivs(slideIndex += n);
-}
-
-function showDivs(n) {
-    var i;
-    var x = document.getElementsByClassName("slideshow");
-    if (n > x.length) {
-        slideIndex = 1
-    }
-    if (n < 1) {
-        slideIndex = x.length
-    }
-    for (i = 0; i < x.length; i++) {
-        x[i].style.display = "none";
-    }
-    x[slideIndex-1].style.display = "block";
-}
-</script>
-<style>
- #tabs-1{font-size: 14px;}
- .ui-widget-header {
- 	background: #FFFFFF;
-    color: #FFFFFF;
-    font-weight: bold;
-    border: none;
- }
-</style>
-
-</head>
-<body>
-Click <a href="{% url 'visualize:index' %}">here</a> to go back to the index.
-<div id="tabs-1">
-	<ul>
-		<li><a href = "#tab-overview">Overview</a></li>
-		<li><a href = "#tab-figures">Figures</a></li>
-		<li><a href = "#tab-parameters">Parameters</a></li>
-		<li><a href = "#tab-outputs">Output</a></li>
-	</ul>
-	<div id = "tab-overview">
+{% block header %}
+	<link rel="stylesheet" type="text/css" href="{% static 'visualize/detail.css' %}" />
+	<link rel="stylesheet" type="text/css" href="{% static 'visualize/w3.css' %}" />
+{% endblock %}
+{% block content %}
+<ul class="nav nav-tabs">
+	<li class="active"><a data-toggle="tab" href="#tab-overview">Overview</a></li>
+	<li><a data-toggle="tab" href="#tab-figures">Figures</a></li>
+	<li><a data-toggle="tab" href="#tab-parameters">Parameters</a></li>
+	<li><a data-toggle="tab" href="#tab-outputs">Output</a></li>
+</ul>
+<div class="tab-content">
+	<div id = "tab-overview" class="tab-pane fade in active">
 		<h2>Simulation {{sim.name}} </h2>
 		<p>{{ sim.comments }}</p>
 		{% if rup %}
@@ -91,23 +48,37 @@ Click <a href="{% url 'visualize:index' %}">here</a> to go back to the index.
 		{% endif %}
 	</div>
 
-	<div id = "tab-figures">
+	<div id = "tab-figures" class="tab-pane fade">
 		<h2>Figures</h2>
 		{% if figs %}
+			<div id="carousel" class="carousel slide" data-ride="carousel">
+			<div class="carousel-inner" role="listbox">
 			{% for fig in figs %}
-			<div class="slideshow">
-			<h3>{{ fig.name }}</h3>
-			<img src="{{ fig.file_path }}" style="width:100%">
-			</div>
+				{% if forloop.first %}
+				<div class="item active">
+				{% else %}
+				<div class="item">
+				{% endif %}
+				<h3>{{ fig.name }}</h3>
+				<img src="{{ fig.file_path }}" style="width:100%">
+				</div>
 			{% endfor %}
-			<a class="w3-btn-floating" style="position:absolute;top:99%;left:45%; color:white;" onclick="plusDivs(-1)">❮</a>
-			<a class="w3-btn-floating" style="position:absolute;top:99%;right:45%; color:white;" onclick="plusDivs(1)">❯</a>
+			</div>
+			<a class="left carousel-control" href="#carousel" role="button" data-slide="prev">
+			    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+			    <span class="sr-only">Previous</span>
+		  	</a>
+		    <a class="right carousel-control" href="#carousel" role="button" data-slide="next">
+			    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+			    <span class="sr-only">Next</span>
+			</a>
+			</div>
 		{% else %}
 		<p>There are no figures to display for this model.</p>
 		{% endif %}
 	</div>
 
-	<div id="tab-parameters">
+	<div id="tab-parameters" class="tab-pane fade">
 		{% if par %}
 		<h2>Simulation Parameters</h2>
 		<table>
@@ -144,7 +115,7 @@ Click <a href="{% url 'visualize:index' %}">here</a> to go back to the index.
 		{% endif %}
 	</div>
 
-	<div id="tab-outputs">
+	<div id="tab-outputs" class="tab-pane fade">
 		{% if outp %}
 		<h2>Simulation Outputs</h2>
 		<table>
@@ -165,6 +136,6 @@ Click <a href="{% url 'visualize:index' %}">here</a> to go back to the index.
 		</table>
 		{% endif %}
 		</div>
-</div>
-</body>
-</html>
+	</div>
+<script type="text/javascript" src="{% static 'visualize/detail.js' %}"/></script>
+{% endblock %}

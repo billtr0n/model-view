@@ -1,8 +1,5 @@
-<html>
-<head>
-</head>
-<body>
-Click <a href="{% url 'visualize:upload' %}">here</a> to upload a model.
+{% extends "visualize/base.html" %}
+{% block content %}
 <h2>Simulation List</h2>
 {% if simulation_list %}
     <ul>
@@ -13,5 +10,4 @@ Click <a href="{% url 'visualize:upload' %}">here</a> to upload a model.
 {% else %}
     <p>No simulations available.</p>
 {% endif %}
-</body>
-</html>
+{% endblock %}
