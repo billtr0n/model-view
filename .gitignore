@@ -7,3 +7,7 @@ todo
 *.pdf
 visualize/media/visualize/models/*
 dump.rdb
+media/
+static/
+logs/
+scripts/

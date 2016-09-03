@@ -1,5 +1,6 @@
 {% extends "visualize/base.html" %}
 {% load staticfiles %}
+
 {% block header %}
 	<link rel="stylesheet" type="text/css" href="{% static 'visualize/detail.css' %}" />
 	<link rel="stylesheet" type="text/css" href="{% static 'visualize/w3.css' %}" />
@@ -70,7 +71,7 @@
 				<div class="item">
 				{% endif %}
 				<h3>{{ fig.name }}</h3>
-				<img src="{{ fig.file_path }}" style="width:100%">
+				<img src="{{MEDIA_URL}}visualize/models/{{fig.file_path}}" style="width:100%">
 				</div>
 			{% endfor %}
 			</div>

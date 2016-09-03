@@ -38,6 +38,7 @@ def process_and_upload_simulations_task( file ):
 
     from .forms import SimulationForm, ParametersForm, RuptureParametersForm, OnePointForm, FigureForm, SimulationInputForm, SimulationOutputForm, ActivateFigureForm
     from .models import Simulation, Figure
+    from django.conf import settings
 
     """ Model setup, this will return false in ready method of class when written """
     # parse simulation details into dict
@@ -48,8 +49,8 @@ def process_and_upload_simulations_task( file ):
     try:
         simulation = _parse_simulation_details( cwd )
         # get necessary params for evaluation
-    except:
-        logger.error('unable to parse meta.py file.')
+    except Exception as e:
+        logger.error('unable to parse meta.py file.\nerror: %s' % str(e)) 
         return
 
     # copy necessary files
@@ -77,23 +78,24 @@ def process_and_upload_simulations_task( file ):
             os.mkdir( figdir )
         if not os.path.exists( datadir ):
             os.mkdir( datadir )
-    except Exception as e:
-        print str(e)
-        return
 
-    # this should be more general to plot any/all of the fields output
-    # interface with fieldnames.py to write little blurb about each fig
-    # for now, these can be hard coded.
-    logger.info('beginning work on %s' % outdir)
-    files = {
-        'su1'  : os.path.join( outdir, 'su1' ),
-        'su2'  : os.path.join( outdir, 'su2' ),
-        'trup' : os.path.join( outdir, 'trup' ),
-        'psv'  : os.path.join( outdir, 'psv' ),
-        'tsm'  : os.path.join( outdir, 'tsm' ),
-        'tnm'  : os.path.join( outdir, 'tnm' ),
-    }
-    logger.info( 'working with files: %s' % ', '.join( files.keys() ) )
+        # this should be more general to plot any/all of the fields output
+        # interface with fieldnames.py to write little blurb about each fig
+        # for now, these can be hard coded.
+        
+        logger.info('beginning work on %s' % outdir)
+        files = {
+            'su1'  : os.path.join( outdir, 'su1' ),
+            'su2'  : os.path.join( outdir, 'su2' ),
+            'trup' : os.path.join( outdir, 'trup' ),
+            'psv'  : os.path.join( outdir, 'psv' ),
+            'tsm'  : os.path.join( outdir, 'tsm' ),
+            'tnm'  : os.path.join( outdir, 'tnm' ),
+        }
+        logger.info( 'working with files: %s' % ', '.join( files.keys() ) )
+    except Exception as e:
+        logger.error(str(e))
+        return
 
     # load files into dict
     # TODO: change this functionality to accept any field in simulation['fieldio']['inputs']
@@ -142,7 +144,7 @@ def process_and_upload_simulations_task( file ):
             'del_tau'      : data['dtau'][rupture_inds].mean() / 1e6  # misleading need to fix
         }
     except Exception as e:
-        logger.error(e)
+        logger.error(str(e))
         # set state to failed
         return
 
@@ -162,32 +164,27 @@ def process_and_upload_simulations_task( file ):
 
     # set up list of figures for database
     figs = []
-    media_root = os.path.join( os.path.dirname(os.path.realpath(__file__)), 'media/visualize/models/' )
     for key in clabel:
         figs.append( {'name': key, 
-                      'file_path': os.path.join(media_root, 
-                            simulation['parameters']['name'] + "_" + key + '1.png' ),
+                      'file_path': simulation['parameters']['name'] + "_" + key + '1.png',
                       'active': True    
                       } )
 
     # manually add variogram figure because it comes from R
     figs.append( {'name': 'vario',
-                  'file_path': os.path.join(media_root, 
-                        simulation['parameters']['name'] + '_vario1.png' ),
+                  'file_path': simulation['parameters']['name'] + '_vario1.png',
                   'active': True
                   } )
 
     # manually add histogram
     figs.append( {'name': 'hist',
-                  'file_path': os.path.join(media_root, 
-                        simulation['parameters']['name'] + '_hist1.png' ),
+                  'file_path': simulation['parameters']['name'] + '_hist1.png',
                   'active': True
                   } )
 
-    # manually add variogram figure because it comes from R
+    # manually add histogram
     figs.append( {'name': 'hist_log',
-                  'file_path': os.path.join(media_root, 
-                        simulation['parameters']['name'] + '_hist_log1.png' ),
+                  'file_path': simulation['parameters']['name'] + '_hist_log1.png',
                   'active': True
                   } )
 
@@ -317,12 +314,15 @@ def process_and_upload_simulations_task( file ):
     for fig in figs:
         src = os.path.join( figdir, fig['name'] + '.png' )
         # create incrementing filenames without state file
+	# needs regular expression to parse number of filename out
         if os.path.isfile( fig['name'] ):
             basename = os.path.splitext( fig['file_path'] )[0]
             # assumes number is hardcoded before the '.' preceding the file ext and increments by one
             number = int(basename[-1]) + 1
             fig['file_path'] = basename[:-1] + str(number) + '.png'
-        shutil.copy( src, fig['file_path'] )
+
+	media_dir = os.path.join( settings.MEDIA_ROOT, 'visualize/models' )
+        shutil.copy( src, os.path.join( media_dir, fig['file_path'] ) )
 
 
     logger.info('saving to database')

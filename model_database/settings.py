@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'c4kr*44ia#3e0*6rk9a4x_!a2^c74pq6#g&b$)u_*@#&i&pr^i'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [ 'localhost' ]
 
@@ -63,6 +63,7 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
+                'django.template.context_processors.media',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
@@ -85,8 +86,8 @@ WSGI_APPLICATION = 'model_database.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'model_database',
-        'USER': 'william',
+        'NAME': 'pyorogeny',
+        'USER': 'webappuser',
         'PASSWORD': 'Perchlife!',
         'HOST': 'localhost',
         'PORT': '',
@@ -129,11 +130,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'),]
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'visualize/media')
-MEDIA_URL = '/visualize/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 # CELERY STUFF
 BROKER_URL = 'redis://localhost:6379'
