@@ -7,7 +7,7 @@ simple web-database to store and display dynamic rupture simulations from sord. 
 ```brew install postgres``` <br>
 
 #####configure postgre database<br>
-``` $ psql -d postgres ```
+``` $ psql -d postgres ``` <br>
 ``` postgres=# CREATE ROLE dbuser WITH LOGIN PASSWORD 'Perchlife!'; ```<br>
 ``` postgres=# CREATE DATABASE model_database; ```<br>
 ``` postgres=# GRANT ALL PRIVILEGES ON DATABASE model_database TO dbuser; ```<br>
