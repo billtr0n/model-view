@@ -1,6 +1,17 @@
 # pyOrogeny
 simple web-database to store and display dynamic rupture simulations from sord. initial start for fully web-based dynamic rupture simulation platform.
 
+### Downloading and configuring postgreSQL database
+
+#####install postgreSQL<br>
+```brew install postgres``` <br>
+
+#####configure postgre database<br>
+``` $ psql -d postgres ```
+``` postgres=# CREATE ROLE dbuser WITH LOGIN PASSWORD 'Perchlife!'; ```<br>
+``` postgres=# CREATE DATABASE model_database; ```<br>
+``` postgres=# GRANT ALL PRIVILEGES ON DATABASE model_database TO dbuser; ```<br>
+``` postgres=# ALTER USER dbuser CREATEDB; ```<br>
 
 ### Starting development server
 
