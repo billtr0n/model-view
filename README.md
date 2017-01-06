@@ -46,11 +46,10 @@ start django server <br>
 * implement tagging system for database
 * add support for gmpe comparisons
 * and wave-propagation simulations
-* refactor tasks.py to provide more abstraction for easier implementation of tasks, maybe make generic tasks that can be extended (see wave propagation)
 
 #### Future
 * develop datastore to store raw data
-* keep track of simulation update process?
+*
 
 
 

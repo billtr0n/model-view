@@ -6,10 +6,10 @@
 	<link rel="stylesheet" type="text/css" href="{% static 'visualize/w3.css' %}" />
 {% endblock %}
 {% block left-sidebar %}
-<h4>Simulation List</h4>
+<h2>Simulation List</h2>
 {% if list %}
     {% for simulation in list %}
-    <a class='might-overflow' data-toggle="popover" data-placement="bottom" data-content="{{ simulation.name }}" href="{% url 'visualize:detail' simulation.id %}">{{ simulation.name }}</a><br>
+    <a href="{% url 'visualize:detail' simulation.id %}">{{ simulation.name }}</a><br>
     {% endfor %}
 {% else %}
     <p>No simulations available.</p>
